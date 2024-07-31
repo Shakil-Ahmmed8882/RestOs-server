@@ -3,7 +3,7 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { foodServices } from "./food.service";
 
-const createFood = catchAsync(async (req, res) => {
+const handleCreateFood = catchAsync(async (req, res) => {
   const food = req.body;
   const result = await foodServices.createFood(food);
 
@@ -15,8 +15,18 @@ const createFood = catchAsync(async (req, res) => {
   });
 });
 
-const getAllFoods = catchAsync(async (req, res) => {
-  
+const handleGetSingleFood = catchAsync(async (req, res) => {
+  const { foodId } = req.params;
+  const result = await foodServices.getSingleFood(foodId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Food is retrieved successfully",
+    data: result,
+  });
+});
+const handleGetAllFoods = catchAsync(async (req, res) => {
   const result = await foodServices.getAllFoods(req.query);
 
   sendResponse(res, {
@@ -27,10 +37,8 @@ const getAllFoods = catchAsync(async (req, res) => {
   });
 });
 
-
-
-
 export const foodControllers = {
-  createFood,
-  getAllFoods
+  handleCreateFood,
+  handleGetSingleFood,
+  handleGetAllFoods,
 };

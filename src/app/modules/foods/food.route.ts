@@ -8,8 +8,9 @@ const router = Router();
 router.post(
   "/create-food",
   validateRequest(foodValidations.foodValidationSchema),
-  foodControllers.createFood
+  foodControllers.handleCreateFood
 );
-router.get("/", foodControllers.getAllFoods);
+router.get("/:foodId", foodControllers.handleGetSingleFood);
+router.get("/", foodControllers.handleGetAllFoods);
 
 export const foodRoutes = router;

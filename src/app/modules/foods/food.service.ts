@@ -7,6 +7,11 @@ const createFood = async (payload: TFoodData) => {
   return result;
 };
 
+const getSingleFood = async (id:string) => {
+  const result = FoodModel.findById(id)
+  return result
+};
+
 const getAllFoods = async (query: Record<string, unknown>) => {
   const result = new QueryBuilder(FoodModel.find(), query).search(['foodName']);
   return await result.modelQuery;
@@ -14,5 +19,6 @@ const getAllFoods = async (query: Record<string, unknown>) => {
 
 export const foodServices = {
   createFood,
+  getSingleFood,
   getAllFoods,
 };

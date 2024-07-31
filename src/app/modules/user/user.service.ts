@@ -3,6 +3,10 @@ import { TUser } from "./user.interface";
 import UserModel from "./user.model";
 
 const createUser = async (payload: TUser) => {
+  const user = await UserModel.findOne({ email: payload.email });
+
+  if (user) return;
+
   const result = await UserModel.create(payload);
   return result;
 };
