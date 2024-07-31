@@ -1,0 +1,328 @@
+[
+    {
+      "foodName": "Spaghetti",
+      "status":"",
+      "foodImage": "https://www.pixelstalk.net/wp-content/uploads/2016/08/Fresh-hot-delicious-food-wallpaper.jpg",
+      "foodCategory": "Italian",
+      "price": 12.99,
+      "orders":0,
+      "quantity": 250,
+      "made_by": "Chef Mario",
+      "food_origin": "Italy",
+      "description": "A classic Italian dish made with pasta, ground beef, tomato sauce, and aromatic herbs.",
+       "reviews": [
+          {
+            "customer_name": "PastaLover123",
+            "rating": 4.8,
+            "comment": "Delicious spaghetti with a rich and savory sauce!",
+            "date": "2023-11-15"
+          },
+          {
+            "customer_name": "FoodieChef88",
+            "rating": 4.5,
+            "comment": "Great Italian classic, perfectly cooked pasta.",
+            "date": "2023-11-16"
+          },
+          {
+            "customer_name": "TasteExplorer",
+            "rating": 4.9,
+            "comment": "A taste of Italy right at home!",
+            "date": "2023-11-17"
+          }
+        ]
+    },
+    {
+      "foodName": "Sushi ",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/R.7f97f3f2d2426b9809438a32fb9521be?rik=ejOTRlavXQ991Q&riu=http%3a%2f%2fwww.wallpaperup.com%2fuploads%2fwallpapers%2f2015%2f06%2f14%2f722372%2f7f97f3f2d2426b9809438a32fb9521be.jpg&ehk=TwmurfeEayFz%2fjECHAszb5YwyJP%2b0%2fO26s0X6y1%2bWvI%3d&risl=&pid=ImgRaw&r=0",
+      "foodCategory": "Japanese",
+      "price": 16.99,
+      "orders":0,
+      "quantity": 150,
+      "made_by": "Sushi Master Yuki",
+      "food_origin": "Japan",
+      "description": "Delicious sushi rolls with fresh fish, rice, and seaweed, served with soy sauce and wasabi.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Chicken",
+      "status":"",
+      "foodImage": "https://www.pixelstalk.net/wp-content/uploads/2016/08/Fresh-hot-delicious-food-wallpaper.jpg",
+      "foodCategory": "Indian",
+      "price": 14.99,
+      "orders":0,
+      "quantity": 200,
+      "made_by": "Chef Patel",
+      "food_origin": "India",
+      "description": "Tender pieces of chicken in a creamy tomato-based sauce with aromatic Indian spices.",
+      "reviews": [
+          {
+            "customer_name": "SpiceEnthusiast",
+            "rating": 4.6,
+            "comment": "Perfectly spiced chicken, loved the flavors.",
+            "date": "2023-11-21"
+          },
+          {
+            "customer_name": "IndianFoodie",
+            "rating": 4.8,
+            "comment": "A great Indian dish, very satisfying.",
+            "date": "2023-11-22"
+          },
+          {
+            "customer_name": "CurryLover99",
+            "rating": 4.7,
+            "comment": "Tasty and authentic Indian cuisine!",
+            "date": "2023-11-23"
+          }
+        ]
+    },
+    {
+      "foodName": "Hamburger",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.83lR5irRq_HMHcp-zskg9gAAAA?pid=ImgDet&rs=1",
+      "foodCategory": "American",
+      "price": 8.99,
+      "orders":0,
+      "quantity": 300,
+      "made_by": "Grill Master Jack",
+      "food_origin": "United States",
+      "description": "Classic hamburger with a juicy patty, lettuce, tomato, and special sauce.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Pad Thai",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/R.5a5c8fb23e4d4d0673cacb718502b2ad?rik=Mrq%2bhtRe0w3now&riu=http%3a%2f%2fthai-rest.com%2fwp-content%2fuploads%2f2019%2f02%2fPad-Thai-in-Thailand-types-prices-simple-recipe.jpg&ehk=%2b6NNxpeMI9u8WjCLpWeZ1nyLpYU9G9YcHSDpUZcJ%2bX0%3d&risl=&pid=ImgRaw&r=0&sres=1&sresct=1",
+      "foodCategory": "Thai",
+      "price": 11.99,
+      "orders":0,
+      "quantity": 180,
+      "made_by": "Chef Nong",
+      "food_origin": "Thailand",
+      "description": "Stir-fried rice noodles with shrimp, tofu, and a tangy tamarind sauce.",
+      "reviews": [
+          {
+            "customer_name": "TamarindTango",
+            "rating": 4.9,
+            "comment": "Tangy and delicious Pad Thai, loved the balance of flavors.",
+            "date": "2023-11-27"
+          },
+          {
+            "customer_name": "NoodleNirvana",
+            "rating": 4.8,
+            "comment": "Authentic Thai taste, excellent dish!",
+            "date": "2023-11-28"
+          },
+          {
+            "customer_name": "TofuLover55",
+            "rating": 4.7,
+            "comment": "Great Pad Thai with the perfect combination of ingredients.",
+            "date": "2023-11-29"
+          }
+        ]
+    },
+    {
+      "foodName": "Margarita Pizza",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.ayO-dKKqnDjJLntbwGT4QwAAAA?pid=ImgDet&rs=1",
+      "foodCategory": "Italian",
+      "price": 10.99,
+      "orders":0,
+      "quantity": 220,
+      "made_by": "Pizza Chef Luigi",
+      "food_origin": "Italy",
+      "description": "Traditional Italian pizza with tomato sauce, mozzarella, and fresh basil.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Sashimi Platter",
+      "status":"",
+      "foodImage": "https://www.streetdirectory.com/stock_images/travel/simg_show/11795119060657/1/sashimi_platter/",
+      "foodCategory": "Japanese",
+      "price": 18.99,
+      "orders":0,
+      "quantity": 160,
+      "made_by": "Sushi Chef Hiroshi",
+      "food_origin": "Japan",
+      "description": "Assortment of fresh raw fish slices served with pickled ginger and wasabi.",
+      "reviews": [
+          {
+            "customer_name": "SashimiSensation",
+            "rating": 4.9,
+            "comment": "Top-quality sashimi, a delightful experience!",
+            "date": "2023-12-03"
+          },
+          {
+            "customer_name": "SushiArtisan",
+            "rating": 4.8,
+            "comment": "Exquisite sashimi platter, a true work of art!",
+            "date": "2023-12-04"
+          },
+          {
+            "customer_name": "FreshFishFan",
+            "rating": 5.0,
+            "comment": "Incredible sashimi, the freshness is unmatched!",
+            "date": "2023-12-05"
+          }
+        ]
+    },
+    {
+      "foodName": "Chana ",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.nCo96XWIEdriPqIj33WZkwHaHa?pid=ImgDet&rs=1",
+      "foodCategory": "Indian",
+      "price": 13.99,
+      "orders":0,
+      "quantity": 190,
+      "made_by": "Chef Priya",
+      "food_origin": "India",
+      "description": "A flavorful chickpea curry with spices and herbs, perfect for vegetarians.",
+      "reviews":[]
+    },
+    {
+      "foodName": "BBQ Ribs",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.ClX5yD2zye6gE4W-JTUGVwHaE7?pid=ImgDet&rs=1",
+      "foodCategory": "American",
+      "price": 14.99,
+      "orders":0,
+      "quantity": 280,
+      "made_by": "Pitmaster Bill",
+      "food_origin": "United States",
+      "description": "Slow-cooked, tender barbecue ribs with a smoky and tangy sauce.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Green Curry",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/R.da6bd293bddabf867c09af2dd4ae8485?rik=julkAAlrz0pgtA&pid=ImgRaw&r=0",
+      "foodCategory": "Thai",
+      "price": 12.99,
+      "orders":0,
+      "quantity": 175,
+      "made_by": "Chef Achara",
+      "food_origin": "Thailand",
+      "description": "A spicy Thai curry with coconut milk, chicken, and aromatic herbs.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Lasagna",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.HjNsF-UE8TkbawgTy4LXLwHaFj?pid=ImgDet&rs=1",
+      "foodCategory": "Italian",
+      "price": 11.99,
+      "orders":0,
+      "quantity": 210,
+      "made_by": " Gabriella",
+      "food_origin": "Italy",
+      "description": "Layered pasta dish with ricotta, mozzarella, and a rich meat sauce.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Miso Soup",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.nP1S6sGgc_4i7OvkGDb7cwHaEo?pid=ImgDet&rs=1",
+      "foodCategory": "Japanese",
+      "price": 4.99,
+      "orders":0,
+      "quantity": 350,
+      "made_by": "Soup Master Yuki",
+      "food_origin": "Japan",
+      "description": "A traditional Japanese soup with soybean paste, tofu, and seaweed.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Ramen",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.osevOkIE-w06dJ3sMwcJggHaHa?pid=ImgDet&rs=1",
+      "foodCategory": "Japanese",
+      "price": 9.99,
+      "orders":0,
+      "quantity": 190,
+      "made_by": "Ramen Chef Yuki",
+      "food_origin": "Japan",
+      "description": "Japanese noodle soup with savory broth, pork, and various toppings.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Biryani",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.9pYnLlgJ_D20McH-0XnwmgHaE9?pid=ImgDet&rs=1",
+      "foodCategory": "Indian",
+      "price": 13.99,
+      "orders":0,
+      "quantity": 210,
+      "made_by": "Chef Arjun",
+      "food_origin": "India",
+      "description": "A fragrant and flavorful Indian rice dish with spices, meat, and vegetables.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Pho",
+      "status":"",
+      "foodImage": "https://phovta.com/image/upload/catalog/san-pham/128-pho-ga-chicken-pho-1000x1000.jpg",
+      "foodCategory": "Vietnamese",
+      "price": 10.99,
+      "orders":0,
+      "quantity": 180,
+      "made_by": "Pho Chef Linh",
+      "food_origin": "Vietnam",
+      "description": "Vietnamese noodle soup with a rich, aromatic broth, beef, and fresh herbs.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Samosa",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.fbtxgaByjmL1YcBiJrolmgHaG4?pid=ImgDet&rs=1",
+      "foodCategory": "Indian",
+      "price": 2.99,
+      "orders":0,
+      "quantity": 280,
+      "made_by": "Samosa Maker Priya",
+      "food_origin": "India",
+      "description": "Deep-fried pastry filled with spiced potatoes, peas, and other ingredients.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Fish and Chips",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.VkmObMoRTbm44yqbFYMGbAHaFi?pid=ImgDet&rs=1",
+      "foodCategory": "British",
+      "price": 9.99,
+      "orders":0,
+      "quantity": 250,
+      "made_by": "Fish and Chips Shop John",
+      "food_origin": "United Kingdom",
+      "description": "Classic British dish with battered fish and deep-fried potato chips.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Tacos",
+      "status":"",
+      "foodImage": "https://th.bing.com/th/id/OIP.gRufhIr4C_K26I3a-8QAAQHaE8?pid=ImgDet&rs=1",
+      "foodCategory": "Mexican",
+      "price": 7.99,
+      "orders":0,
+      "quantity": 320,
+      "made_by": "Taco Chef Maria",
+      "food_origin": "Mexico",
+      "description": "Mexican street food with folded tortillas, various fillings, and salsa.",
+      "reviews":[]
+    },
+    {
+      "foodName": "Peking Duck",
+      "status":"",
+      "foodImage": "https://foodsguy.com/wp-content/uploads/2019/08/Peking-Duck.jpg",
+      "foodCategory": "Chinese",
+      "price": 18.99,
+      "orders":0,
+      "quantity": 170,
+      "made_by": "Duck Master Li",
+      "food_origin": "China",
+      "description": "Crispy roasted duck dish with thin pancakes, hoisin sauce, and sliced scallions.",
+      "reviews":[]
+    }
+  ]
+
+
+  
