@@ -37,8 +37,20 @@ const handleGetAllFoods = catchAsync(async (req, res) => {
   });
 });
 
+const handleGetTopFoods = catchAsync(async (req, res) => {
+  const result = await foodServices.getAllFoods(req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "retrieved all foods successfully",
+    data: result,
+  });
+});
+
 export const foodControllers = {
   handleCreateFood,
   handleGetSingleFood,
   handleGetAllFoods,
+  handleGetTopFoods
 };

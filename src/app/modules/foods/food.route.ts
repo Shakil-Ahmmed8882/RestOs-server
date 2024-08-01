@@ -11,6 +11,7 @@ router.post(
   foodControllers.handleCreateFood
 );
 router.get("/:foodId", foodControllers.handleGetSingleFood);
+router.get("/top-selling-food", foodControllers.handleGetSingleFood);
 router.get("/", foodControllers.handleGetAllFoods);
 
 export const foodRoutes = router;

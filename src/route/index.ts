@@ -1,17 +1,22 @@
 import { Router } from "express";
 import { foodRoutes } from "../app/modules/foods/food.route";
 import { userRoutes } from "../app/modules/user/user.routes";
+import { orderRoutes } from "../app/modules/order/order.route";
 
 const router = Router();
 
 const moduleRoutes = [
   {
+    path: "/users",
+    route: userRoutes,
+  },
+  {
     path: "/foods",
     route: foodRoutes,
   },
   {
-    path: "/users",
-    route: userRoutes,
+    path: "/orders",
+    route: orderRoutes,
   },
 ];
 
