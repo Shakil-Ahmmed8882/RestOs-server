@@ -3,18 +3,11 @@ import { TUser } from "./user.interface";
 
 // Mongoose schema for Review
 const userSchema = new Schema<TUser>({
-  name: {
-    type: String,
-  },
-  email: {
-    type: String,
-  },
-  photo: {
-    type: String,
-  },
-  role: {
-    type: String,
-  },
+  name: String,
+  email: String,
+  photo: String,
+  role: String,
+  orders: Array,
 });
 
 // Mongoose model for FoodData

@@ -3,4 +3,5 @@ export interface TUser {
   email: string;
   photo: string;
   role: string;
+  orders: string[];
 }
