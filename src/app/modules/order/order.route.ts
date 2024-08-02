@@ -11,7 +11,7 @@ router.post(
   orderControllers.handleCreateOrder
 );
 router.get("/:orderId", orderControllers.handleGetSingleOrder);
-
 router.get("/", orderControllers.handleGetAllOrders);
+router.delete("/:orderId/:email", orderControllers.handleDeleteOrder);
 
 export const orderRoutes = router;

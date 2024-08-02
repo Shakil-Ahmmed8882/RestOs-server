@@ -19,10 +19,13 @@ const createOrder = async (payload: TOrderFood) => {
   session.startTransaction();
 
   try {
-    const product = await OrdersModel.findOne({ foodId: payload.foodId });
+    const products = await OrdersModel.findOne({
+      email: payload.email,
+      foodId: payload.foodId,
+    });
 
     // check no duplicate order
-    if (product) {
+    if (products) {
       throw new Error("Opps! this product is already ordered");
     }
 
@@ -33,6 +36,10 @@ const createOrder = async (payload: TOrderFood) => {
     );
     if (!user) {
       throw new Error("User not found!");
+    }
+
+    if (user.orders.includes(payload.foodId)) {
+      throw new Error("Already exist");
     }
 
     // Add the order ID to the user's orders and save the user
@@ -69,9 +76,42 @@ const getAllOrders = async (query: Record<string, unknown>) => {
     .paginate();
   return await result.modelQuery;
 };
+const deleteOrder = async (id: string, email: string) => {
+  const session = await startSession();
+  session.startTransaction();
+
+  try {
+    console.log({ id, email });
+
+    await UserModel.updateOne({ email }, { $pull: { orders: id } }).session(
+      session
+    );
+
+    const orderDeletionResult = await OrdersModel.deleteOne(
+      { foodId: id, email },
+      {
+        session: session,
+      }
+    );
+
+    if (!orderDeletionResult) {
+      throw new Error("Order not found.");
+    }
+
+    await session.commitTransaction();
+    console.log(orderDeletionResult);
+    return orderDeletionResult;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
 
 export const OrderServiices = {
   createOrder,
   getSingleOrder,
   getAllOrders,
+  deleteOrder,
 };

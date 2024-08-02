@@ -6,7 +6,6 @@ import { OrderServiices } from "./order.service";
 const handleCreateOrder = catchAsync(async (req, res) => {
   const order = req.body;
   const result = await OrderServiices.createOrder(order);
-  
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -37,9 +36,21 @@ const handleGetAllOrders = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const handleDeleteOrder = catchAsync(async (req, res) => {
+  const { orderId, email } = req.params;
+  const result = await OrderServiices.deleteOrder(orderId, email);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Order is deleted successfully",
+    data: result,
+  });
+});
 
 export const orderControllers = {
   handleCreateOrder,
   handleGetSingleOrder,
   handleGetAllOrders,
+  handleDeleteOrder,
 };
