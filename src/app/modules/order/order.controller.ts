@@ -3,6 +3,9 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { OrderServiices } from "./order.service";
 
+
+
+
 const handleCreateOrder = catchAsync(async (req, res) => {
   const order = req.body;
   const result = await OrderServiices.createOrder(order);
@@ -29,10 +32,10 @@ const handleGetSingleOrder = catchAsync(async (req, res) => {
 const handleGetAllOrders = catchAsync(async (req, res) => {
   const result = await OrderServiices.getAllOrders(req.query);
 
-  sendResponse(res, {
+   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "retrieved all Orders successfully",
+    message: 'Student are retrieved succesfully',
     data: result,
   });
 });
@@ -48,9 +51,27 @@ const handleDeleteOrder = catchAsync(async (req, res) => {
   });
 });
 
+// Add this function to your existing order.controller.ts file
+const handleGetOrderSummary = catchAsync(async (req, res) => {
+  const { email } = req.params; // Extract email from the request parameters
+
+  // Call the service method to get the order summary
+  const summary = await OrderServiices.getOrderSummaryByEmail(email);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Order summary retrieved successfully",
+    data: summary,
+  });
+});
+
+
+
 export const orderControllers = {
   handleCreateOrder,
   handleGetSingleOrder,
   handleGetAllOrders,
   handleDeleteOrder,
+  handleGetOrderSummary
 };

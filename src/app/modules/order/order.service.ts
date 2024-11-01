@@ -62,19 +62,24 @@ const createOrder = async (payload: TOrderFood) => {
     throw error;
   }
 };
-
 const getSingleOrder = async (id: string) => {
   const result = OrdersModel.findById(id);
   return result;
 };
-
 const getAllOrders = async (query: Record<string, unknown>) => {
-  const result = new QueryBuilder(OrdersModel.find(), query)
+  const orderQuery = new QueryBuilder(OrdersModel.find(), query)
     .search(["foodName"])
     .filter()
     .sort()
     .paginate();
-  return await result.modelQuery;
+
+  const meta = await orderQuery.countTotal();
+  const result = await orderQuery.modelQuery;
+
+  return {
+    meta,
+    result,
+  };
 };
 const deleteOrder = async (id: string, email: string) => {
   const session = await startSession();
@@ -109,9 +114,44 @@ const deleteOrder = async (id: string, email: string) => {
   }
 };
 
+
+
+
+/**
+ * Retrieves the order summary for a specific user.
+ * 
+ * @param email - The email of the user for whom to retrieve the order summary.
+ * @returns An object containing the total purchase price and total order count.
+ */
+const getOrderSummaryByEmail = async (email: string) => {
+  // Fetch orders associated with the user
+  const orders = await OrdersModel.find({ email });
+
+  // Calculate totals
+  const totalPurchasePrice = orders
+    .filter(order => order.status === 'confirmed') 
+    .reduce((acc, order) => acc + order.price, 0);
+
+  const totalPurchaseCount = orders.filter(order => order.status === 'confirmed').length; 
+
+  const totalOrderPrice = orders.reduce((acc, order) => acc + order.price, 0).toFixed(2); 
+
+  const totalOrderCount = orders.length;
+
+  return {
+    totalPurchasePrice,
+    totalPurchaseCount,
+    totalOrderPrice,
+    totalOrderCount,
+  };
+};
+
+
+
 export const OrderServiices = {
   createOrder,
   getSingleOrder,
   getAllOrders,
   deleteOrder,
+  getOrderSummaryByEmail
 };

@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 import app from "./app";
+import config from "./config";
 const port = 5000;
 
 async function main() {
   try {
-    
     // await mongoose.connect("mongodb://localhost:27017");
-    await mongoose.connect("mongodb+srv://RestaurantManagementSystem:VvORLvvbBbIXOxvo@cluster0.sk8jxpx.mongodb.net/RestOS?retryWrites=true&w=majority");
+    await mongoose.connect(`${config.database_url}`);
+
     app.listen(port, () => {
       console.log(`app is listening on port ${port}`);
     });

@@ -15,7 +15,7 @@ const FoodItemSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-// Create the Mongoose model
+// Create the Mongoose model 
 const OrdersModel = mongoose.model<TOrderFood>("Orders", FoodItemSchema);
 
 export default OrdersModel;

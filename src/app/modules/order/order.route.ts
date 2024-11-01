@@ -12,6 +12,7 @@ router.post(
 );
 router.get("/:orderId", orderControllers.handleGetSingleOrder);
 router.get("/", orderControllers.handleGetAllOrders);
+router.get("/summary/:email", orderControllers.handleGetOrderSummary);
 router.delete("/:orderId/:email", orderControllers.handleDeleteOrder);
 
 export const orderRoutes = router;

@@ -27,7 +27,9 @@ const getAllFoods = async (query: Record<string, unknown>) => {
     .search(["foodName"])
     .filter()
     .sort()
-    .paginate();
+    .paginate()
+    .fields();
+
   return await result.modelQuery;
 };
 
