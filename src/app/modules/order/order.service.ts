@@ -134,7 +134,7 @@ const getOrderSummaryByEmail = async (email: string) => {
 
   const totalPurchaseCount = orders.filter(order => order.status === 'confirmed').length; 
 
-  const totalOrderPrice = orders.reduce((acc, order) => acc + order.price, 0).toFixed(2); 
+  const totalOrderPrice = orders.reduce((acc, order) => acc + order.price, 0).toFixed(2 ); 
 
   const totalOrderCount = orders.length;
 
