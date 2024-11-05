@@ -1,16 +1,26 @@
 import mongoose, { Schema } from "mongoose";
 import { TUser } from "./user.interface";
+import { USER_ROLE, USER_STATUS } from "../../constants";
 
-// Mongoose schema for Review
+
 const userSchema = new Schema<TUser>({
   name: String,
+  password: String,
   email: String,
   photo: String,
-  role: String,
-  orders: Array,
+  role: {
+    type: String, 
+    required: true,
+    enum: [USER_ROLE.ADMIN, USER_ROLE.USER]
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: [USER_STATUS.ACTIVE, USER_STATUS.BLOCKED], 
+    default: USER_STATUS.ACTIVE,
+  }
+  
 });
-
-// Mongoose model for FoodData
 
 const UserModel = mongoose.model<TUser>("User", userSchema);
 

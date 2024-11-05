@@ -2,6 +2,7 @@ import QueryBuilder from "../../builder/QueryBuilder";
 import BlogModel from "./blog.model";
 import { IBlog } from "./blog.interface";
 import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
+import { searchableFields } from "./blog.constant";
 
 // Create a new blog
 const createBlog = async (file: any, payload: IBlog) => {
@@ -13,7 +14,6 @@ const createBlog = async (file: any, payload: IBlog) => {
       //send image to cloudinary
       const { secure_url } = await sendImageToCloudinary(imageName, path);
       payload.image = secure_url as string;
-
     }
 
     const blogData = await BlogModel.create(payload);
@@ -25,12 +25,20 @@ const createBlog = async (file: any, payload: IBlog) => {
 
 // Get all blogs with query options
 const getAllBlogs = async (query: Record<string, unknown>) => {
-  const result = new QueryBuilder(BlogModel.find(), query)
-  .search([
-    "title",
-    "category",
-  ]);
-  return await result.modelQuery;
+  const blogQuery = new QueryBuilder(BlogModel.find(), query)
+    .search(searchableFields)
+    .filter()
+    .sort()
+    .paginate();
+    
+    const result = await blogQuery.modelQuery.populate("author.user");
+
+    
+    console.log("_________________________________")
+
+    console.log("url",query)
+    console.log({result})
+  return result;
 };
 
 // Get a single blog by ID

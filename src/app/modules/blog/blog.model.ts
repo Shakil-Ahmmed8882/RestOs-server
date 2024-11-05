@@ -10,7 +10,7 @@ const blogSchema = new Schema<IBlog>({
   instructions: { type: [String], required: true },
   image: { type: String, required: true },
   author: {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
   },
   status: {
@@ -18,6 +18,7 @@ const blogSchema = new Schema<IBlog>({
     enum: ["pending", "approved", "test-approved"],
     default: "pending",
   },
+  isDeleted: { type: Boolean, default: false },
   likes: { type: Number, default: 0 },
   commentsCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },

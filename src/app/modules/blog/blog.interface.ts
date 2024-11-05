@@ -6,10 +6,11 @@ export interface IBlog extends Document {
   tags?: string[];
   image?: string;
   author: {
-    userId: string;
+    user: string;
     name: string;
   };
   status: "pending" | "approved" | "test-approved";
+  isDeleted: boolean,
   createdAt: Date;
   updatedAt: Date;
   likes: number;

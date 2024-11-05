@@ -1,0 +1,1 @@
+export const demoProfileUrl = "https://cdn-icons-png.flaticon.com/512/219/219986.png"

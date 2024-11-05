@@ -4,10 +4,16 @@ import { userRoutes } from "../app/modules/user/user.routes";
 import { orderRoutes } from "../app/modules/order/order.route";
 import { testRoutes } from "../app/modules/tests/test.routes";
 import { blogRoutes } from "../app/modules/blog/blog.routes";
+import { authRoutes } from "../app/modules/auth/auth.route";
+import { commentRoutes } from "../app/modules/comments/comment.route";
 
 const router = Router();
 
 const moduleRoutes = [
+  {
+    path: "/auths",
+    route: authRoutes,
+  },
   {
     path: "/users",
     route: userRoutes,
@@ -23,6 +29,10 @@ const moduleRoutes = [
   {
     path: "/blogs",
     route: blogRoutes,
+  },
+  {
+    path: "/comments",
+    route: commentRoutes,
   },
   {
     path: "/tests",
