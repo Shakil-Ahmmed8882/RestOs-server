@@ -10,8 +10,6 @@ const handleAddReplyToComment = catchAsync(async (req, res) => {
   const { comment } = req.body; 
   const userId = req.user.userId; 
 
-  
-  console.log("_____________________________ repluy", req.body)
 
   const result = await replyServices.addReplyToComment(
     commentId,
@@ -27,6 +25,53 @@ const handleAddReplyToComment = catchAsync(async (req, res) => {
   });
 });
 
+// Update an existing reply
+const handleUpdateReply = catchAsync(async (req, res) => {
+    const { commentId, replyId } = req.params;
+    const { comment } = req.body; 
+    const userId = req.user.userId;
+  
+    const result = await replyServices.updateReply(
+      commentId,
+      replyId,
+      userId,
+      comment
+    );
+  
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Reply updated successfully",
+      data: result,
+    });
+  });
+  
+  // Delete a reply
+  const handleDeleteReply = catchAsync(async (req, res) => {
+    const { commentId, replyId } = req.params;
+    const userId = req.user.userId;
+    const userRole = req.user.role;
+  
+    const result = await replyServices.deleteReply(
+      commentId,
+      replyId,
+      userId,
+      userRole
+    );
+  
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Reply deleted successfully",
+      data: result,
+    });
+  });
+  
+
+
+
 export const replyControllers = {
-    handleAddReplyToComment
+    handleAddReplyToComment,
+    handleUpdateReply,
+    handleDeleteReply
 };
