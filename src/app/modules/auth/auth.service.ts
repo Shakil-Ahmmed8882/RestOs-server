@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import config from "../../config";
-import AppError from "../../error/app.error";
+import AppError from "../../errors/AppError";
 
 import bcryptJs from "bcryptjs";
 

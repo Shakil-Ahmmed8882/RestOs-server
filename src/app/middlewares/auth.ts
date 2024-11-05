@@ -37,7 +37,7 @@ export default auth;
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
 import { USER_ROLE } from '../constants';
-import AppError from '../error/app.error';
+import AppError from '../errors/AppError';
 import config from '../config';
 import UserModel from '../modules/user/user.model';
 

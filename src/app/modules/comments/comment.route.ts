@@ -1,6 +1,6 @@
 import express from "express";
 import validateRequest from "../../middlewares/validateRequest";
-import { CommentController } from "./comment.controller"; // Ensure to create this controller
+import { CommentController } from "./comment.controller";
 import {
   createCommentValidationSchema,
   updateCommentValidationSchema,
@@ -42,5 +42,8 @@ router.delete(
   auth(USER_ROLE.ADMIN, USER_ROLE.USER),
   CommentController.deleteCommentById
 );
+
+
+
 
 export const commentRoutes = router;

@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import QueryBuilder from "../../builder/QueryBuilder";
-import AppError from "../../error/app.error";
+import AppError from "../../errors/AppError";
 import { TUser } from "./user.interface";
 import UserModel from "./user.model";
 

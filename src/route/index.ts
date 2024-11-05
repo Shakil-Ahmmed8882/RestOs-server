@@ -6,6 +6,7 @@ import { testRoutes } from "../app/modules/tests/test.routes";
 import { blogRoutes } from "../app/modules/blog/blog.routes";
 import { authRoutes } from "../app/modules/auth/auth.route";
 import { commentRoutes } from "../app/modules/comments/comment.route";
+import { replyRoutes } from "../app/modules/reply/reply.route";
 
 const router = Router();
 
@@ -33,6 +34,10 @@ const moduleRoutes = [
   {
     path: "/comments",
     route: commentRoutes,
+  },
+  {
+    path: "/replies",
+    route: replyRoutes,
   },
   {
     path: "/tests",

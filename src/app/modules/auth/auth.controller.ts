@@ -1,5 +1,5 @@
 import httpStatus from 'http-status';
-import AppError from '../../error/app.error';
+import AppError from '../../errors/AppError';
 import catchAsync from '../../utils/catchAsync';
 import { AuthServices } from './auth.service';
 import sendResponse from '../../utils/sendResponse';
