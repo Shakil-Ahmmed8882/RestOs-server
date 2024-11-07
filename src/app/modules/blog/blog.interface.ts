@@ -11,8 +11,10 @@ export interface IBlog extends Document {
   };
   status: "pending" | "approved" | "test-approved";
   isDeleted: boolean,
+  likesCount: number;
+  commentsCount: number;
+  upvotes: number;
+  downvotes: number;
   createdAt: Date;
   updatedAt: Date;
-  likes: number;
-  commentsCount: number;
 }

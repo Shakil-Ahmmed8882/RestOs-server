@@ -38,7 +38,7 @@ const createOrder = async (payload: TOrderFood) => {
       throw new Error("User not found!");
     }
 
-    if (user.orders.includes(payload.foodId)) {
+    if (user.orders?.includes(payload.foodId)) {
       throw new Error("Already exist");
     }
 

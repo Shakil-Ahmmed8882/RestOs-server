@@ -7,6 +7,7 @@ import { blogRoutes } from "../app/modules/blog/blog.routes";
 import { authRoutes } from "../app/modules/auth/auth.route";
 import { commentRoutes } from "../app/modules/comments/comment.route";
 import { replyRoutes } from "../app/modules/reply/reply.route";
+import { voteRoutes } from "../app/modules/vote/vote.route";
 
 const router = Router();
 
@@ -38,6 +39,10 @@ const moduleRoutes = [
   {
     path: "/replies",
     route: replyRoutes,
+  },
+  {
+    path: "/votes",
+    route: voteRoutes,
   },
   {
     path: "/tests",

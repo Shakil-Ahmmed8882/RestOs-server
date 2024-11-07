@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const createVoteValidationSchema = z.object({
   body: z.object({
-    post: z.string().nonempty("Post ID is required"),
+    blog: z.string().nonempty("Blog ID is required"),
     voteType: z.enum(['upvote', 'downvote'], {
       errorMap: () => ({ message: 'Vote type must be either "upvote" or "downvote"' }),
     }),

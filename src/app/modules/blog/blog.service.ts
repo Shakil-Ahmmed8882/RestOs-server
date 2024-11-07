@@ -33,11 +33,6 @@ const getAllBlogs = async (query: Record<string, unknown>) => {
     
     const result = await blogQuery.modelQuery.populate("author.user");
 
-    
-    console.log("_________________________________")
-
-    console.log("url",query)
-    console.log({result})
   return result;
 };
 

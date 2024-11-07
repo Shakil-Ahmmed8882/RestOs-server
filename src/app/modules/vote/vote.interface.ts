@@ -6,7 +6,7 @@ export type VoteType = 'upvote' | 'downvote';
 // Interface for the Vote Document
 export interface IVote extends Document {
   user: Types.ObjectId;    
-  post: Types.ObjectId;    
+  blog: Types.ObjectId;    
   voteType: VoteType;      
   createdAt: Date;
 }

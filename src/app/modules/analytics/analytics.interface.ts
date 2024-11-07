@@ -1,9 +1,9 @@
 import { Types } from "mongoose";
 
 export interface IAnalytics {
-  post: Types.ObjectId;        
+  blog: Types.ObjectId;        
   user: Types.ObjectId;        
-  actionType: 'view' | 'upvote' | 'downvote' | 'comment' | "post"; 
+  actionType: 'view' | 'upvote' | 'downvote' | 'comment' | "blog"; 
   timestamp?: Date;       
   metadata?: any;        
 }

@@ -8,9 +8,9 @@ const voteSchema = new Schema<IVote>(
       ref: 'User',
       required: true,
     },
-    post: {
+    blog: {
       type: Schema.Types.ObjectId,
-      ref: 'Post',
+      ref: 'Blog',
       required: true,
     },
     voteType: {
@@ -23,7 +23,7 @@ const voteSchema = new Schema<IVote>(
 );
 
 // Add indexes for optimized queries
-// voteSchema.index({ userId: 1, postId: 1 });
-// voteSchema.index({ postId: 1, voteType: 1 }); 
+// voteSchema.index({ userId: 1, blogId: 1 });
+// voteSchema.index({ blogId: 1, voteType: 1 }); 
 
 export const Vote =  mongoose.models.Vote ||  mongoose.model<IVote>('Vote', voteSchema);

@@ -59,6 +59,8 @@ const getAllCommentsOnSingleBlog = catchAsync(async (req, res) => {
 const updateCommentById = catchAsync(async (req, res) => {
   const { commentId } = req.params;
   const { userId } = req.user;
+
+  
   const result = await CommentService.updateCommentById(
     userId,
     commentId,

@@ -4,9 +4,9 @@ import { IAnalytics } from './analytics.interface';
 
 const analyticsSchema = new Schema<IAnalytics>(
   {
-    post: {
+    blog: {
       type: Schema.Types.ObjectId,
-      ref: 'Post',           
+      ref: 'Blog',           
       required: true,
       index: true,
     },
