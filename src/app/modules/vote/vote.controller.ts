@@ -21,11 +21,11 @@ const createVote = catchAsync(async (req, res) => {
   });
 });
 
-// Retrieve all votes (upvotes/downvotes) for a specific post
+// Retrieve all votes (upvotes/downvotes) for a specific blog
 
-const getAllVotesOnSinglePost = catchAsync(async (req, res) => {
+const getAllVotesOnSingleBlog = catchAsync(async (req, res) => {
   const { blogId } = req.params;
-  const result = await VoteService.getAllVotesOnSinglePost(blogId, req.query);
+  const result = await VoteService.getAllVotesOnSingleBlog(blogId, req.query);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -36,12 +36,25 @@ const getAllVotesOnSinglePost = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleVoteOfSingleUser = catchAsync(async (req, res) => {
+  const { blogId } = req.params;
+  const {userId} = req.user
+  const result = await VoteService.getSingleVoteOfSingleUser(blogId, userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Signle vote on a blog retrieved successfully",
+    data: result,
+  });
+});
+
 // Delete a vote (undo the vote)
 const deleteVote = catchAsync(async (req, res) => {
-  const { voteId } = req.params;
+  const { blogId } = req.params;
   const userId = req.user.userId;
 
-  await VoteService.deleteVote(voteId, userId);
+  await VoteService.deleteVote(blogId, userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -53,6 +66,7 @@ const deleteVote = catchAsync(async (req, res) => {
 
 export const VoteController = {
   createVote,
-  getAllVotesOnSinglePost,
+   getAllVotesOnSingleBlog,
   deleteVote,
+ getSingleVoteOfSingleUser
 };

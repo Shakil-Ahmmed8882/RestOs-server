@@ -15,16 +15,24 @@ router.post(
   VoteController.createVote
 );
 
-// Get all votes on signgle post
+// Get all votes on signgle blog
 router.get(
   "/:blogId",
   auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  VoteController.getAllVotesOnSinglePost
+  VoteController.getAllVotesOnSingleBlog
+);
+
+// get only one single 
+// vote of a user on single blog
+router.get(
+  "/single-user/blog/:blogId",
+  auth(USER_ROLE.ADMIN, USER_ROLE.USER),
+  VoteController.getSingleVoteOfSingleUser
 );
 
 // Delete a vote (if user wants to undo their vote)
 router.delete(
-  "/:voteId",
+  "/:blogId",
   auth(USER_ROLE.ADMIN, USER_ROLE.USER),
   VoteController.deleteVote
 );

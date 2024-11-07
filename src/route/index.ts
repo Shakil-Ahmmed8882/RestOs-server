@@ -8,6 +8,8 @@ import { authRoutes } from "../app/modules/auth/auth.route";
 import { commentRoutes } from "../app/modules/comments/comment.route";
 import { replyRoutes } from "../app/modules/reply/reply.route";
 import { voteRoutes } from "../app/modules/vote/vote.route";
+import { saveRoutes } from "../app/modules/save/save.route";
+import { analyticRoutes } from "../app/modules/analytics/analytics.route";
 
 const router = Router();
 
@@ -43,6 +45,14 @@ const moduleRoutes = [
   {
     path: "/votes",
     route: voteRoutes,
+  },
+  {
+    path: "/saves",
+    route: saveRoutes,
+  },
+  {
+    path: "/analytics",
+    route: analyticRoutes,
   },
   {
     path: "/tests",

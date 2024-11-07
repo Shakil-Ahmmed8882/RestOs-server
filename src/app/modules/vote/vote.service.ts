@@ -115,7 +115,7 @@ const createOrUpdateVote = async (
   }
 };
 
-const getAllVotesOnSinglePost = async (
+const getAllVotesOnSingleBlog = async (
   blogId: string,
   query: Record<string, unknown>
 ) => {
@@ -142,13 +142,39 @@ const getAllVotesOnSinglePost = async (
   };
 };
 
-const deleteVote = async (voteId: string, userId: string) => {
+const getSingleVoteOfSingleUser = async (blogId: string, userId: string) => {
   // Start a session for the transaction
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const vote = await Vote.findById(voteId).session(session);
+    const blog = await BlogModel.findById(blogId).session(session);
+
+    if (!blog) {
+      throw new AppError(httpStatus.NOT_FOUND, "Blog not found");
+    }
+
+    const vote = await Vote.findOne({ blog: blogId, user: userId });
+
+    await session.commitTransaction();
+    return {voteType:vote.voteType};
+  } catch (error) {
+    // If there's an error, abort the transaction
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    // End the session
+    session.endSession();
+  }
+};
+
+const deleteVote = async (blogId: string, userId: string) => {
+  // Start a session for the transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const vote = await Vote.findOne({blog:blogId,user:userId}).session(session);
 
     if (!vote) {
       throw new AppError(httpStatus.NOT_FOUND, "Vote not found");
@@ -174,7 +200,7 @@ const deleteVote = async (voteId: string, userId: string) => {
     }
 
     // Remove the vote
-    await Vote.deleteOne({ _id: voteId }).session(session);
+    await Vote.deleteOne({ _id: vote._id }).session(session);
 
     // Commit the transaction
     await session.commitTransaction();
@@ -192,5 +218,6 @@ const deleteVote = async (voteId: string, userId: string) => {
 export const VoteService = {
   createOrUpdateVote,
   deleteVote,
-  getAllVotesOnSinglePost,
+  getAllVotesOnSingleBlog,
+  getSingleVoteOfSingleUser,
 };

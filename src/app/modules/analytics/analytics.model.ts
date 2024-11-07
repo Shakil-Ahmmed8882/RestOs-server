@@ -1,6 +1,7 @@
 // analytics.model.ts
 import mongoose, { Schema } from 'mongoose';
 import { IAnalytics } from './analytics.interface';
+import { ActionType } from './analytics.constant';
 
 const analyticsSchema = new Schema<IAnalytics>(
   {
@@ -18,7 +19,7 @@ const analyticsSchema = new Schema<IAnalytics>(
     },
     actionType: {
       type: String,
-      enum: ['view', 'upvote', 'downvote', 'comment',"post"],  
+      enum: Object.values(ActionType),  
       required: true,
     },
     timestamp: {
