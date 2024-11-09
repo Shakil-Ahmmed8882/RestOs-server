@@ -26,7 +26,33 @@ const handleGetAllUsers = catchAsync(async (req, res) => {
   });
 });
 
+const HandleGetSingleUser = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const result = await userServices.getSingleUser(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Retrieved single user successfully",
+    data: result,
+  });
+});
+
+const handleUpdateUser = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const result = await userServices.updateUser(userId, req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Update user data successfully",
+    data: result,
+  });
+});
+
 export const userControllers = {
   handleCreateUser,
   handleGetAllUsers,
+  HandleGetSingleUser,
+  handleUpdateUser,
 };

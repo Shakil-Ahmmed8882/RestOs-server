@@ -3,7 +3,7 @@ import AppError from "../../errors/AppError";
 import { Save } from "./save.model";
 import mongoose from "mongoose";
 import QueryBuilder from "../../builder/QueryBuilder";
-import validateUserStatus from "../../helper/validateUserStatus";
+import validateUserAndStatus from "../../helper/validateUserStatus";
 import validateBlogExistence from "../../helper/validateBlogExistance";
 import { saveBlogSearchableFields } from "./save.constant";
 import createAnalyticsRecord from "../analytics/analytics.service";
@@ -20,7 +20,7 @@ const saveBlog = async (userId: string, blogId: string): Promise<any> => {
   session.startTransaction();
 
   try {
-    await validateUserStatus(userId);
+    await validateUserAndStatus(userId);
     const blog = await validateBlogExistence(blogId);
 
     const alreadySavedBlog = await Save.findOne({
@@ -78,7 +78,7 @@ const unsaveBlog = async (userId: string, blogId: string): Promise<any> => {
   session.startTransaction();
 
   try {
-    await validateUserStatus(userId);
+    await validateUserAndStatus(userId);
     await validateBlogExistence(blogId);
 
     const deletionResult = await Save.deleteOne(
@@ -122,7 +122,7 @@ const getUserSavedBlogs = async (
   query: Record<string, unknown>
 ) => {
   try {
-    await validateUserStatus(userId);
+    await validateUserAndStatus(userId);
 
     const savedBlogQuery = new QueryBuilder(
       Save.find({ user: new mongoose.Types.ObjectId(userId) }),
@@ -159,7 +159,7 @@ const isBlogSavedByUser = async (
   blogId: string
 ): Promise<boolean> => {
   try {
-    await validateUserStatus(userId);
+    await validateUserAndStatus(userId);
     await validateBlogExistence(blogId);
 
     const savedBlog = await Save.findOne({

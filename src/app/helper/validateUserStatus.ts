@@ -9,7 +9,7 @@ import { TUser } from "../modules/user/user.interface";
  * @param userId - User ID
  * @returns Promise<void>
  */
-const validateUserStatus = async (userId: string): Promise<TUser> => {
+const validateUserAndStatus = async (userId: string): Promise<TUser> => {
   const user = await UserModel.findById(userId);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
@@ -21,4 +21,4 @@ const validateUserStatus = async (userId: string): Promise<TUser> => {
   return user;
 };
 
-export default validateUserStatus;
+export default validateUserAndStatus;

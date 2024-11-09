@@ -27,11 +27,11 @@ const loginUser = async (payload: TLoginUser) => {
     const user = await createUser(userData);
 
     const jwtPayload = {
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      photo: user.photo,
+      userId: user?._id,
+      name: user?.name,
+      email: user?.email,
+      role: user?.role,
+      photo: user?.photo as string,
     };
 
     const accessToken = createToken(
@@ -67,7 +67,7 @@ const loginUser = async (payload: TLoginUser) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      photo: user.photo,
+      photo: user.photo as string,
     };
 
     const accessToken = createToken(
@@ -108,7 +108,7 @@ const refreshToken = async (token: string) => {
     name: user.name,
     email: user.email,
     role: user.role,
-    photo: user.photo,
+    photo: user.photo as string ,
   };
 
   const accessToken = createToken(
@@ -162,7 +162,7 @@ const registerUser = async (userData: TLoginUser) => {
         name: createdUser.name,
         email: createdUser.email,
         role: createdUser.role,
-        photo: createdUser.photo,
+        photo: createdUser.photo as string,
       };
 
       const accessToken = createToken(
@@ -230,7 +230,7 @@ const forgetPassword = async (userId: string) => {
     name: user.name,
     email: user.email,
     role: user.role,
-    photo: user.photo,
+    photo: user.photo as string,
   };
 
   const resetToken = createToken(
