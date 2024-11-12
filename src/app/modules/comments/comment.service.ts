@@ -174,11 +174,9 @@ const deleteCommentById = async (commentId: string, user: JwtPayload) => {
     const result = await Comment.findByIdAndDelete(commentId,{session});
 
     await session.commitTransaction();
-    await session.endSession();
     return result[0];
   } catch (error: any) {
     await session.abortTransaction();
-    await session.endSession();
     console.error("Transaction aborted:", error.message);
     throw error;
   } finally {

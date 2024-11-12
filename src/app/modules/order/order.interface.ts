@@ -1,16 +1,11 @@
-export type TOrderFood = {
-  foodId: string;
-  foodName: string;
+import { Schema } from "mongoose";
+
+// Type for Order model
+export type TOrder = {
+  _id: string;
+  food: Schema.Types.ObjectId;
+  user: Schema.Types.ObjectId;
   status: string;
-  foodImage: string;
-  foodCategory: string;
-  price: number;
-  orders: number;
   quantity: number;
-  made_by: string;
-  food_origin: string;
-  description: string;
-  reviews: any[];
-  orderedDate?: string;
-  email?: string;
+  totalPrice: number;
 };

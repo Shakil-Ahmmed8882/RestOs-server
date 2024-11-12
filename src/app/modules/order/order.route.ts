@@ -1,18 +1,19 @@
 import { Router } from "express";
 import validateRequest from "../../utils/validateRequest";
-import { orderFoodValidations } from "./order.validation";
+
 import { orderControllers } from "./order.controller";
+import { orderValidations } from "./order.validation";
 
 const router = Router();
 
 router.post(
   "/create-order",
-  validateRequest(orderFoodValidations.createOrderFood),
+  validateRequest(orderValidations.createOrderZodSchema),
   orderControllers.handleCreateOrder
 );
 router.get("/:orderId", orderControllers.handleGetSingleOrder);
 router.get("/", orderControllers.handleGetAllOrders);
-router.get("/summary/:email", orderControllers.handleGetOrderSummary);
-router.delete("/:orderId/:email", orderControllers.handleDeleteOrder);
+router.get("/summary/:userId", orderControllers.handleGetOrderSummaryOfSingleUser);
+router.delete("/:orderId", orderControllers.handleDeleteOrder);
 
 export const orderRoutes = router;

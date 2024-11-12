@@ -19,8 +19,8 @@ const handleCreateOrder = catchAsync(async (req, res) => {
 });
 
 const handleGetSingleOrder = catchAsync(async (req, res) => {
-  const { foodId } = req.params;
-  const result = await OrderServiices.getSingleOrder(foodId);
+  const { orderId } = req.params;
+  const result = await OrderServiices.getSingleOrder(orderId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -40,8 +40,8 @@ const handleGetAllOrders = catchAsync(async (req, res) => {
   });
 });
 const handleDeleteOrder = catchAsync(async (req, res) => {
-  const { orderId, email } = req.params;
-  const result = await OrderServiices.deleteOrder(orderId, email);
+  const { orderId } = req.params;
+  const result = await OrderServiices.deleteOrder(orderId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -52,11 +52,11 @@ const handleDeleteOrder = catchAsync(async (req, res) => {
 });
 
 // Add this function to your existing order.controller.ts file
-const handleGetOrderSummary = catchAsync(async (req, res) => {
-  const { email } = req.params; // Extract email from the request parameters
+const handleGetOrderSummaryOfSingleUser = catchAsync(async (req, res) => {
+  const { userId } = req.params; 
 
   // Call the service method to get the order summary
-  const summary = await OrderServiices.getOrderSummaryByEmail(email);
+  const summary = await OrderServiices.getOrderSummaryOfSingleUser(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -73,5 +73,5 @@ export const orderControllers = {
   handleGetSingleOrder,
   handleGetAllOrders,
   handleDeleteOrder,
-  handleGetOrderSummary
+ handleGetOrderSummaryOfSingleUser
 };

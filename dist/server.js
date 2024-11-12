@@ -13,13 +13,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
-const app_1 = require("./app");
+const app_1 = __importDefault(require("./app"));
+const config_1 = __importDefault(require("./app/config"));
+const port = 5000;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield mongoose_1.default.connect("mongodb://localhost:27017");
-            app_1.app.listen(6000, () => {
-                console.log(`app is listening on port ${60000}`);
+            // await mongoose.connect("mongodb://localhost:27017");
+            yield mongoose_1.default.connect(`${config_1.default.database_url}`);
+            app_1.default.listen(port, () => {
+                console.log(`app is listening on port ${port}`);
             });
         }
         catch (err) {

@@ -1,9 +1,12 @@
-import { Error, startSession } from "mongoose";
+import mongoose, { Error, Schema, startSession } from "mongoose";
 import QueryBuilder from "../../builder/QueryBuilder";
-import { TOrderFood } from "./order.interface";
 import OrdersModel from "./order.model";
 import UserModel from "../user/user.model";
-import { TUser } from "../user/user.interface";
+import { TOrder } from "./order.interface";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
+import FoodModel from "../foods/food.model";
+import { USER_STATUS } from "../../constants";
 
 /**
  * Creates an order and associates it with a user.
@@ -13,38 +16,36 @@ import { TUser } from "../user/user.interface";
  * @returns The created order.
  * @throws Will throw an error if the user is not found or if any database operation fails.
  */
-const createOrder = async (payload: TOrderFood) => {
+const createOrder = async (payload: TOrder) => {
   // Start a new session for the transaction
   const session = await startSession();
   session.startTransaction();
 
   try {
+    // Find the user by email and
+    //include the session in the query
+    const user = await UserModel.findById(payload.user).session(session);
+    if (!user) {
+      throw new Error("User not found!");
+    }
+    if (user.status !== USER_STATUS.ACTIVE) {
+      throw new Error("User not active!");
+    }
+
+    const food = await FoodModel.findById(payload.food).session(session);
+    if (!food) {
+      throw new Error("Food not found!");
+    }
+
     const products = await OrdersModel.findOne({
-      email: payload.email,
-      foodId: payload.foodId,
+      food: payload.food,
+      user: payload.user,
     });
 
     // check no duplicate order
     if (products) {
       throw new Error("Opps! this product is already ordered");
     }
-
-    // Find the user by email and
-    //include the session in the query
-    const user = await UserModel.findOne({ email: payload.email }).session(
-      session
-    );
-    if (!user) {
-      throw new Error("User not found!");
-    }
-
-    if (user.orders?.includes(payload.foodId)) {
-      throw new Error("Already exist");
-    }
-
-    // Add the order ID to the user's orders and save the user
-    user.orders.push(payload.foodId);
-    await user.save({ session });
 
     // Create the order in the Orders collection
     const result = await OrdersModel.create([payload], { session });
@@ -63,7 +64,7 @@ const createOrder = async (payload: TOrderFood) => {
   }
 };
 const getSingleOrder = async (id: string) => {
-  const result = OrdersModel.findById(id);
+  const result = OrdersModel.findById(id).populate("food").populate("user");
   return result;
 };
 const getAllOrders = async (query: Record<string, unknown>) => {
@@ -74,26 +75,22 @@ const getAllOrders = async (query: Record<string, unknown>) => {
     .paginate();
 
   const meta = await orderQuery.countTotal();
-  const result = await orderQuery.modelQuery;
+  const result = await orderQuery.modelQuery.populate("food").populate("user");
 
   return {
     meta,
     result,
   };
 };
-const deleteOrder = async (id: string, email: string) => {
+
+const deleteOrder = async (orderId: string) => {
   const session = await startSession();
   session.startTransaction();
 
   try {
-    console.log({ id, email });
-
-    await UserModel.updateOne({ email }, { $pull: { orders: id } }).session(
-      session
-    );
-
+    
     const orderDeletionResult = await OrdersModel.deleteOne(
-      { foodId: id, email },
+      { _id:orderId},
       {
         session: session,
       }
@@ -104,7 +101,6 @@ const deleteOrder = async (id: string, email: string) => {
     }
 
     await session.commitTransaction();
-    console.log(orderDeletionResult);
     return orderDeletionResult;
   } catch (error) {
     await session.abortTransaction();
@@ -114,27 +110,34 @@ const deleteOrder = async (id: string, email: string) => {
   }
 };
 
-
-
-
 /**
  * Retrieves the order summary for a specific user.
- * 
- * @param email - The email of the user for whom to retrieve the order summary.
+ *
+ * @param userId - The email of the user for whom to retrieve the order summary.
  * @returns An object containing the total purchase price and total order count.
  */
-const getOrderSummaryByEmail = async (email: string) => {
+const getOrderSummaryOfSingleUser = async (userId: string) => {
   // Fetch orders associated with the user
-  const orders = await OrdersModel.find({ email });
 
+  const orders = await OrdersModel.find({
+    user: userId,
+  });
+
+  if (!orders) {
+    throw new AppError(httpStatus.NOT_FOUND, "Opps! order is not found");
+  }
   // Calculate totals
   const totalPurchasePrice = orders
-    .filter(order => order.status === 'confirmed') 
-    .reduce((acc, order) => acc + order.price, 0);
+    .filter((order) => order.status === "confirmed")
+    .reduce((acc, order) => acc + order.totalPrice, 0);
 
-  const totalPurchaseCount = orders.filter(order => order.status === 'confirmed').length; 
+  const totalPurchaseCount = orders.filter(
+    (order) => order.status === "confirmed"
+  ).length;
 
-  const totalOrderPrice = orders.reduce((acc, order) => acc + order.price, 0).toFixed(2 ); 
+  const totalOrderPrice = orders
+    .reduce((acc, order) => acc + order.totalPrice, 0)
+    .toFixed(2);
 
   const totalOrderCount = orders.length;
 
@@ -146,12 +149,10 @@ const getOrderSummaryByEmail = async (email: string) => {
   };
 };
 
-
-
 export const OrderServiices = {
   createOrder,
   getSingleOrder,
   getAllOrders,
   deleteOrder,
-  getOrderSummaryByEmail
+  getOrderSummaryOfSingleUser,
 };

@@ -1,21 +1,24 @@
-import mongoose, { Schema, Document } from "mongoose";
-import { TOrderFood } from "./order.interface";
+import mongoose, { Schema } from "mongoose";
+import { TOrder } from "./order.interface";
 
-// Create the FoodItem schema
-const FoodItemSchema: Schema = new Schema(
+// Define the Order schema with references to Food and User models
+const OrderSchema: Schema<TOrder> = new Schema(
   {
-    foodId: { type: String, required: true },
-    foodName: { type: String, required: true },
-    status: { type: String, required: true, default: "pending" },
-    foodImage: { type: String, required: true },
-    price: { type: Number, required: true },
-    made_by: { type: String, required: true },
-    email: { type: String },
+    food: { type: Schema.Types.ObjectId, ref: "Food", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    status: { 
+      type: String, 
+      enum: ["pending", "confirmed", "canceled"], 
+      default: "pending", 
+      required: true 
+    },
+    quantity: { type: Number, required: true },
+    totalPrice: { type: Number, required: true },
   },
   { timestamps: true }
 );
 
-// Create the Mongoose model 
-const OrdersModel = mongoose.model<TOrderFood>("Orders", FoodItemSchema);
+// Create the Mongoose model
+const OrdersModel = mongoose.model<TOrder>("Orders", OrderSchema);
 
 export default OrdersModel;

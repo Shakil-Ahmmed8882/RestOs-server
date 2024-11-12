@@ -1,27 +1,21 @@
 import { z } from "zod";
 
-const createOrderFood = z.object({
+const createOrderZodSchema = z.object({
   body: z.object({
-    foodId: z.string({ required_error: "food id is required" }),
-    foodName: z.string({ required_error: "Food name is required" }),
-    foodImage: z.string({ required_error: "Food image required" }),
-    price: z.number({ required_error: "Food price is required" }),
-    made_by: z.string({ required_error: "mady by (chef) is required" }),
-    email: z.string({ required_error: "User email is required" }),
-  }),
-});
-const updateOrderFood = z.object({
-  body: z.object({
-    foodId: z.string().optional(),
-    foodName: z.string().optional(),
-    foodImage: z.string().optional(),
-    price: z.number().optional(),
-    made_by: z.string().optional(),
-    email: z.string().optional(),
+    food: z.string({ required_error: "Food ID is required" }),
+    user: z.string({ required_error: "User ID is required" }),
+    quantity: z.number({ required_error: "Quantity is required" }).min(1),
+    totalPrice: z.number({ required_error: "Total Price is required" }).min(1)
   }),
 });
 
-export const orderFoodValidations = {
-  createOrderFood,
-  updateOrderFood,
+const updateOrderZodSchema = z.object({
+  body: z.object({
+    status: z.enum(["pending", "completed", "canceled"]).optional(),
+  }),
+});
+
+export const orderValidations = {
+  createOrderZodSchema,
+  updateOrderZodSchema,
 };
