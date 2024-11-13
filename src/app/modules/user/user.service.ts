@@ -47,7 +47,6 @@ const updateUser = async (userId: string, payload: Partial<TUser>) => {
     throw new AppError(httpStatus.NOT_FOUND, "Oops! User is not found!");
   }
 
-  await validateUserAndStatus(userId);
 
   const {
     cuisinePreferences,
@@ -103,9 +102,20 @@ const updateUser = async (userId: string, payload: Partial<TUser>) => {
   return result;
 };
 
+
+
+
+const deleteUser = async (userId: string) => {
+  // Fetch existing user data
+  const user = await UserModel.findByIdAndDelete(userId)
+  return user;
+};
+
+
 export const userServices = {
   createUser,
   getAllUsers,
   getSingleUser,
   updateUser,
+  deleteUser
 };

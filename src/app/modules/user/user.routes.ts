@@ -14,6 +14,7 @@ router.post(
 );
 router.get("/",auth(USER_ROLE.USER), userControllers.handleGetAllUsers);
 router.get("/single-user",auth(USER_ROLE.USER), userControllers.HandleGetSingleUser);
-router.patch("/",auth(USER_ROLE.USER), validateRequest(userValidations.updateUserValidationSchema), userControllers.handleUpdateUser);
+router.patch("/:userId",auth(USER_ROLE.USER), validateRequest(userValidations.updateUserValidationSchema), userControllers.handleUpdateUser);
+router.delete("/:userId",auth(USER_ROLE.USER), userControllers.handleDeleteUser);
 
 export const userRoutes = router;

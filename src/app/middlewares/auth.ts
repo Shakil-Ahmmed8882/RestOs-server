@@ -7,8 +7,9 @@ import catchAsync from '../utils/catchAsync';
 const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization;
-
-    const { decoded, user } = await validateTokenAndFetchUser(token!);
+    
+    const { decoded } = await validateTokenAndFetchUser(token!);
+    
     
     // Check if role matches required roles
     if (
@@ -18,7 +19,7 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
     }
     
-    
+  
     
     // Attach the user and role to the request object for further use
     req.user = {
@@ -55,6 +56,7 @@ export const validateTokenAndFetchUser = async (token: string) => {
   ) as JwtPayload;
 
   const { email } = decoded;
+
 
   // Check if the user exists
   const user = await UserModel.findOne({ email });

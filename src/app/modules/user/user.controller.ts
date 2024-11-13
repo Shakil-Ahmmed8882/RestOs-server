@@ -39,13 +39,27 @@ const HandleGetSingleUser = catchAsync(async (req, res) => {
 });
 
 const handleUpdateUser = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  const { userId } = req.params;
   const result = await userServices.updateUser(userId, req.body);
+
+
+  
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Update user data successfully",
+    data: result,
+  });
+});
+const handleDeleteUser = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const result = await userServices.deleteUser(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "delete user data successfully",
     data: result,
   });
 });
@@ -55,4 +69,5 @@ export const userControllers = {
   handleGetAllUsers,
   HandleGetSingleUser,
   handleUpdateUser,
+  handleDeleteUser
 };

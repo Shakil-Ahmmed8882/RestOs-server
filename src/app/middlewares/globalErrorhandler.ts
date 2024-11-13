@@ -50,8 +50,7 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     stack: config.NODE_ENV === 'development' ? err?.stack : null,
   });
 
-  // Call next to indicate that the response is handled
-  next();
+  
 };
 
 export default globalErrorHandler;
