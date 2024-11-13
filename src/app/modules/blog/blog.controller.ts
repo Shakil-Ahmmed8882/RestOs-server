@@ -20,13 +20,14 @@ const handleCreateBlog = catchAsync(async (req, res) => {
 
 // Controller to get all blogs with query options
 const handleGetAllBlogs = catchAsync(async (req, res) => {
-  const result = await blogServices.getAllBlogs(req.query);
+  const data = await blogServices.getAllBlogs(req.query);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "All blogs retrieved successfully",
-    data: result,
+    meta: data.meta,
+    data: data.result,
   });
 });
 

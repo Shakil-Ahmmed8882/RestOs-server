@@ -3,6 +3,8 @@ import BlogModel from "./blog.model";
 import { IBlog } from "./blog.interface";
 import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
 import { searchableFields } from "./blog.constant";
+import { Schema } from "zod";
+import mongoose from "mongoose";
 
 // Create a new blog
 const createBlog = async (file: any, payload: IBlog) => {
@@ -25,6 +27,15 @@ const createBlog = async (file: any, payload: IBlog) => {
 
 // Get all blogs with query options
 const getAllBlogs = async (query: Record<string, unknown>) => {
+
+
+    // Check if 'user' is provided in the query and add it to the query object
+    if (query.user) {
+      query['author.user'] = new mongoose.Types.ObjectId(`${query.user}`);
+      delete query.user; 
+    }
+
+
   const blogQuery = new QueryBuilder(BlogModel.find(), query)
     .search(searchableFields)
     .filter()
@@ -32,8 +43,9 @@ const getAllBlogs = async (query: Record<string, unknown>) => {
     .paginate();
     
     const result = await blogQuery.modelQuery.populate("author.user");
+    const meta = await blogQuery.countTotal()
 
-  return result;
+  return {result,meta};
 };
 
 // Get a single blog by ID
