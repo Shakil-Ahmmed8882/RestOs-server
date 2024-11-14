@@ -5,12 +5,13 @@ import httpStatus from "http-status";
 
 // import { JwtPayload } from 'jsonwebtoken';
 // import createAnalyticsRecord from '../../utils/createAnalyticsRecord';
-import mongoose, { Mongoose } from "mongoose";
+import mongoose, { Mongoose, Types } from "mongoose";
 import { USER_STATUS } from "../../constants";
 import UserModel from "../user/user.model";
 import AppError from "../../errors/AppError";
 import BlogModel from "../blog/blog.model";
 import { JwtPayload } from "jsonwebtoken";
+import createAnalyticsRecord from "../analytics/analytics.service";
 
 const createComment = async (userId: string, comment: IComment) => {
   // post and record it as analytics
@@ -48,16 +49,17 @@ const createComment = async (userId: string, comment: IComment) => {
       session,
     });
 
-    // if (commentResult.length > 0) {
-    //   await createAnalyticsRecord(
-    //     {
-    //       post: commentResult[0]._id.toString(),
-    //       user: new Types.ObjectId(userId),
-    //       actionType: 'comment',
-    //     },
-    //     session,
-    //   );
-    // }
+    if (commentResult.length > 0) {
+      await createAnalyticsRecord(
+        {
+          name: blog.title,
+          blog: commentResult[0]._id.toString(),
+          user: new Types.ObjectId(userId),
+          actionType: "comment",
+        },
+        session
+      );
+    }
 
     await session.commitTransaction();
     await session.endSession();
@@ -93,7 +95,7 @@ const getAllComments = async (query: Record<string, unknown>) => {
 
 const getAllCommentsOnSingleBlog = async (
   blogId: string,
-query: Record<string, unknown>
+  query: Record<string, unknown>
 ) => {
   const commentQuery = new QueryBuilder(
     Comment.find({ blog: new mongoose.Types.ObjectId(blogId) }),
@@ -104,11 +106,10 @@ query: Record<string, unknown>
     .paginate()
     .fields();
 
-  const result = await commentQuery.modelQuery
-    .populate({
-      path: "user",
-      select: "name profile email photo",
-    })
+  const result = await commentQuery.modelQuery.populate({
+    path: "user",
+    select: "name profile email photo",
+  });
 
   const metaData = await commentQuery.countTotal();
   return {
@@ -133,7 +134,7 @@ const updateCommentById = async (
   }
 
   const comment = await Comment.findById(commentId);
-  
+
   if (!comment) {
     throw new AppError(httpStatus.NOT_FOUND, "This comment is not found");
   }
@@ -171,7 +172,7 @@ const deleteCommentById = async (commentId: string, user: JwtPayload) => {
     await BlogModel.findByIdAndUpdate(comment.blog, {
       $inc: { commentsCount: -1 },
     }).session(session);
-    const result = await Comment.findByIdAndDelete(commentId,{session});
+    const result = await Comment.findByIdAndDelete(commentId, { session });
 
     await session.commitTransaction();
     return result[0];
@@ -183,8 +184,6 @@ const deleteCommentById = async (commentId: string, user: JwtPayload) => {
     session.endSession();
   }
 };
-
-
 
 // ================= add reply ===================
 const addReplyToComment = async (
@@ -230,7 +229,7 @@ const addReplyToComment = async (
 
     await session.commitTransaction();
     return updatedComment;
-  } catch (error:any) {
+  } catch (error: any) {
     await session.abortTransaction();
     console.error("Transaction aborted:", error.message);
     throw error;
@@ -239,7 +238,6 @@ const addReplyToComment = async (
   }
 };
 
-
 export const CommentService = {
   createComment,
   findCommentById,
@@ -247,5 +245,5 @@ export const CommentService = {
   getAllCommentsOnSingleBlog,
   updateCommentById,
   deleteCommentById,
-  addReplyToComment
+  addReplyToComment,
 };

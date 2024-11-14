@@ -3,49 +3,71 @@ import BlogModel from "./blog.model";
 import { IBlog } from "./blog.interface";
 import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
 import { searchableFields } from "./blog.constant";
-import { Schema } from "zod";
 import mongoose from "mongoose";
+import createAnalyticsRecord from "../analytics/analytics.service";
 
-// Create a new blog
 const createBlog = async (file: any, payload: IBlog) => {
+  
+
+  const session = await mongoose.startSession();
+  
+  // Begin transaction
+  session.startTransaction();
+
+
   try {
     if (file) {
-      const imageName = `${payload.author}${payload?.title}`;
-      const path = file?.path;
+      const imageName = `${payload.author.name}_${payload.title}`;
+      const path = file.path;
 
-      //send image to cloudinary
+      // Send image to cloud storage and retrieve URL
       const { secure_url } = await sendImageToCloudinary(imageName, path);
       payload.image = secure_url as string;
     }
 
-    const blogData = await BlogModel.create(payload);
+    const blogData = await BlogModel.create([payload], { session });
+
+    const res = await createAnalyticsRecord(
+      {
+        name: payload.title,
+        blog: blogData[0]._id,
+        user: new mongoose.Types.ObjectId(payload.author.user),
+        actionType: "blog",
+      },
+      session 
+    );
+
+    
+    console.log(res)
+    await session.commitTransaction();
     return blogData;
   } catch (error: any) {
-    console.log(error.message);
+    await session.abortTransaction();
+    console.error("Error creating blog:", error.message);
+    throw error;
+  } finally {
+    session.endSession();
   }
 };
 
 // Get all blogs with query options
 const getAllBlogs = async (query: Record<string, unknown>) => {
-
-
-    // Check if 'user' is provided in the query and add it to the query object
-    if (query.user) {
-      query['author.user'] = new mongoose.Types.ObjectId(`${query.user}`);
-      delete query.user; 
-    }
-
+  // Check if 'user' is provided in the query and add it to the query object
+  if (query.user) {
+    query["author.user"] = new mongoose.Types.ObjectId(`${query.user}`);
+    delete query.user;
+  }
 
   const blogQuery = new QueryBuilder(BlogModel.find(), query)
     .search(searchableFields)
     .filter()
     .sort()
     .paginate();
-    
-    const result = await blogQuery.modelQuery.populate("author.user");
-    const meta = await blogQuery.countTotal()
 
-  return {result,meta};
+  const result = await blogQuery.modelQuery.populate("author.user");
+  const meta = await blogQuery.countTotal();
+
+  return { result, meta };
 };
 
 // Get a single blog by ID

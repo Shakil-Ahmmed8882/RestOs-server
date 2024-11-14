@@ -11,6 +11,7 @@ export type ActionType =
   | 'unsave-blog';
 
 export interface IAnalytics {
+  name: string;        
   blog: Types.ObjectId;        
   user: Types.ObjectId;        
   actionType: ActionType

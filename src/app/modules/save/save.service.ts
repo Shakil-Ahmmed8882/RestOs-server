@@ -48,6 +48,7 @@ const saveBlog = async (userId: string, blogId: string): Promise<any> => {
     if (result) {
       await createAnalyticsRecord(
         {
+          name: blog.title,
           blog: new mongoose.Types.ObjectId(blogId),
           user: new mongoose.Types.ObjectId(userId),
           actionType: "save-blog",
@@ -79,7 +80,7 @@ const unsaveBlog = async (userId: string, blogId: string): Promise<any> => {
 
   try {
     await validateUserAndStatus(userId);
-    await validateBlogExistence(blogId);
+    const blog = await validateBlogExistence(blogId);
 
     const deletionResult = await Save.deleteOne(
       {
@@ -93,6 +94,7 @@ const unsaveBlog = async (userId: string, blogId: string): Promise<any> => {
     if (deletionResult.deletedCount > 0) {
       await createAnalyticsRecord(
         {
+          name:blog.title,
           blog: new mongoose.Types.ObjectId(blogId),
           user: new mongoose.Types.ObjectId(userId),
           actionType: "unsave-blog",

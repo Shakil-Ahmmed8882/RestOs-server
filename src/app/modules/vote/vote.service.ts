@@ -68,6 +68,7 @@ const createOrUpdateVote = async (
       // Create analytics record for updating a vote
       await createAnalyticsRecord(
         {
+          name: blog.title,
           blog: blogId,
           user: userId,
           actionType: voteType === "upvote" ? "upvote" : "downvote",
@@ -90,6 +91,7 @@ const createOrUpdateVote = async (
       // Create analytics record for new vote
       await createAnalyticsRecord(
         {
+          name: blog.title,
           blog: blogId,
           user: userId,
           actionType: voteType === "upvote" ? "upvote" : "downvote",

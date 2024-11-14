@@ -5,17 +5,21 @@ import { ActionType } from './analytics.constant';
 
 const analyticsSchema = new Schema<IAnalytics>(
   {
+    name: {
+      type: String,
+      ref: 'Blog',           
+      required: true,
+      index: true,
+    },
     blog: {
       type: Schema.Types.ObjectId,
       ref: 'Blog',           
       required: true,
-      index: true,
     },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',           
       required: true,
-      index: true,
     },
     actionType: {
       type: String,

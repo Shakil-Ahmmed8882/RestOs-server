@@ -10,7 +10,7 @@ const createAnalyticsRecord = async (payload: IAnalytics, session: any) => {
     };
 
     // Save the analytics record to the database
-    await Analytics.create([analyticsData], { session });
+   return await Analytics.create([analyticsData], { session });
   } catch (error: any) {
     console.error("Error creating analytics record:", error.message);
     throw error;
@@ -22,13 +22,13 @@ export default createAnalyticsRecord;
 // Retrieve all analytics with query filters (pagination, sorting, etc.)
 const getAllAnalytics = async (query: Record<string, unknown>) => {
   const analyticsQuery = new QueryBuilder(Analytics.find(), query)
-    .search(["user.name", "postId"])
+    .search(["name"])
     .filter()
     .sort()
     .paginate()
     .fields();
 
-  const result = await analyticsQuery.modelQuery.populate("user");
+  const result = await analyticsQuery.modelQuery.populate("blog").populate("user");
   const metaData = await analyticsQuery.countTotal();
 
   return {

@@ -7,6 +7,7 @@ export enum ActionType {
     DOWNVOTE = 'downvote',
     COMMENT = 'comment',
     SAVE_BLOG = 'save-blog',
+    BLOG = 'blog',
     UNSAVE_BLOG = 'unsave-blog',
   }
   
