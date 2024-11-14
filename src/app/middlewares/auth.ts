@@ -61,8 +61,9 @@ export const validateTokenAndFetchUser = async (token: string) => {
   // Check if the user exists
   const user = await UserModel.findOne({ email });
 
+
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'This user is not found!');
+    throw new AppError(httpStatus.NOT_FOUND, 'This user is not found! (auth)');
   }
 
   return {
