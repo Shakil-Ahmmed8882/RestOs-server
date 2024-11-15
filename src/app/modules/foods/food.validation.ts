@@ -23,8 +23,23 @@ const foodValidationSchema = z.object({
   }),
 });
 
-
+const foodUpdateValidationSchema = z.object({
+  body: z.object({
+    foodName: z.string(),
+    status: z.string().optional().optional(),
+    foodImage: z.string().url().optional(),
+    foodCategory: z.string().optional(),
+    price: z.number().positive().optional(),
+    orders: z.number().nonnegative().optional(),
+    quantity: z.number().nonnegative().optional(),
+    made_by: z.string().optional(),
+    food_origin: z.string().optional(),
+    description: z.string().optional(),
+    reviews: z.array(reviewSchema).optional(),
+  }),
+});
 
 export const foodValidations = {
-    foodValidationSchema
-}
+  foodValidationSchema,
+  foodUpdateValidationSchema,
+};

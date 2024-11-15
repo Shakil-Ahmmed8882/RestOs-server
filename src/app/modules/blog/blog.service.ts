@@ -5,15 +5,15 @@ import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
 import { searchableFields } from "./blog.constant";
 import mongoose from "mongoose";
 import createAnalyticsRecord from "../analytics/analytics.service";
+import UserModel from "../user/user.model";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 const createBlog = async (file: any, payload: IBlog) => {
-  
-
   const session = await mongoose.startSession();
-  
+
   // Begin transaction
   session.startTransaction();
-
 
   try {
     if (file) {
@@ -25,20 +25,25 @@ const createBlog = async (file: any, payload: IBlog) => {
       payload.image = secure_url as string;
     }
 
+    const user = await UserModel.findById(payload.author.user).session(session);
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, "Opss! user is not found");
+    }
     const blogData = await BlogModel.create([payload], { session });
 
-    const res = await createAnalyticsRecord(
+    await createAnalyticsRecord(
       {
-        name: payload.title,
+        resourceName: payload.title,
+        userName: user?.name,
         blog: blogData[0]._id,
+        description: `${user.name} Created a blog: ${payload.title}`,
         user: new mongoose.Types.ObjectId(payload.author.user),
         actionType: "blog",
       },
-      session 
+      session
     );
 
     
-    console.log(res)
     await session.commitTransaction();
     return blogData;
   } catch (error: any) {

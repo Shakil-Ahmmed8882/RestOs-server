@@ -6,6 +6,7 @@ const createAnalyticsRecord = async (payload: IAnalytics, session: any) => {
   try {
     const analyticsData = {
       ...payload,
+      date: formatTimestamp(),
       timestamp: new Date(),
     };
 
@@ -22,7 +23,7 @@ export default createAnalyticsRecord;
 // Retrieve all analytics with query filters (pagination, sorting, etc.)
 const getAllAnalytics = async (query: Record<string, unknown>) => {
   const analyticsQuery = new QueryBuilder(Analytics.find(), query)
-    .search(["name"])
+    .search(["userName","resourceName"])
     .filter()
     .sort()
     .paginate()
@@ -60,6 +61,7 @@ const getAnalyticsSummaryMatrix = async () => {
 
 import mongoose from "mongoose";
 import { IAnalytics } from "./analytics.interface";
+import { formatTimestamp } from "../../utils/FormatTimestamp";
 
 const getUserActionCounts = async (userId: string) => {
   try {

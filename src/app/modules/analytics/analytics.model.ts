@@ -5,11 +5,19 @@ import { ActionType } from './analytics.constant';
 
 const analyticsSchema = new Schema<IAnalytics>(
   {
-    name: {
+    resourceName: { 
+      type: String, 
+      required: true, 
+      index: true 
+    },
+    userName: { 
+      type: String, 
+      required: true, 
+      index: true 
+    },
+    description: { 
       type: String,
-      ref: 'Blog',           
-      required: true,
-      index: true,
+      default: '',
     },
     blog: {
       type: Schema.Types.ObjectId,
@@ -26,6 +34,7 @@ const analyticsSchema = new Schema<IAnalytics>(
       enum: Object.values(ActionType),  
       required: true,
     },
+    date: String,
     timestamp: {
       type: Date,
       default: Date.now,      

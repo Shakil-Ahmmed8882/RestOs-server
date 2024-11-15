@@ -10,7 +10,8 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
     
     const { decoded } = await validateTokenAndFetchUser(token!);
     
-    
+      
+      console.log({decoded})
     // Check if role matches required roles
     if (
       requiredRoles.length &&

@@ -9,6 +9,8 @@ import UserModel from "../user/user.model";
 import { USER_STATUS } from "../../constants";
 import createAnalyticsRecord from "../analytics/analytics.service";
 import QueryBuilder from "../../builder/QueryBuilder";
+import validateUserAndStatus from "../../helper/validateUserStatus";
+import { formatTimestamp } from "../../utils/FormatTimestamp";
 
 const createOrUpdateVote = async (
   payload: Pick<IVote, "voteType" | "user" | "blog">
@@ -59,22 +61,39 @@ const createOrUpdateVote = async (
         blog.upvotes += 1;
         blog.downvotes -= 1;
         await blog.save({ session });
+
+        // update like
+
+        // Create analytics record for updating a vote
+        await createAnalyticsRecord(
+          {
+            userName: user.name,
+            resourceName: blog.title,
+            description: `${user.name} Liked ${blog.title}}`,
+            blog: new mongoose.Types.ObjectId(blogId),
+            user: new mongoose.Types.ObjectId(userId),
+            actionType: "upvote",
+          },
+          session
+        );
       } else {
         blog.downvotes += 1;
         blog.upvotes -= 1;
         await blog.save({ session });
-      }
 
-      // Create analytics record for updating a vote
-      await createAnalyticsRecord(
-        {
-          name: blog.title,
-          blog: blogId,
-          user: userId,
-          actionType: voteType === "upvote" ? "upvote" : "downvote",
-        },
-        session
-      );
+        // Update dislike analytics
+        await createAnalyticsRecord(
+          {
+            userName: user.name,
+            resourceName: blog.title,
+            description: `${user.name} Disliked ${blog.title}`,
+            blog: new mongoose.Types.ObjectId(blogId),
+            user: new mongoose.Types.ObjectId(userId),
+            actionType: "downvote",
+          },
+          session
+        );
+      }
     } else {
       // Create a new vote
       await Vote.create([{ blog: blogId, user: userId, voteType }], {
@@ -88,13 +107,15 @@ const createOrUpdateVote = async (
         blog.downvotes += 1;
       }
 
-      // Create analytics record for new vote
+      // Create analytics record for updating a vote
       await createAnalyticsRecord(
         {
-          name: blog.title,
-          blog: blogId,
-          user: userId,
-          actionType: voteType === "upvote" ? "upvote" : "downvote",
+          userName: user.name,
+          resourceName: blog.title,
+          description: `${user.name} Liked ${blog.title}`,
+          blog: new mongoose.Types.ObjectId(blogId),
+          user: new mongoose.Types.ObjectId(userId),
+          actionType: "upvote",
         },
         session
       );
@@ -159,7 +180,7 @@ const getSingleVoteOfSingleUser = async (blogId: string, userId: string) => {
     const vote = await Vote.findOne({ blog: blogId, user: userId });
 
     await session.commitTransaction();
-    return {voteType:vote.voteType};
+    return { voteType: vote.voteType };
   } catch (error) {
     // If there's an error, abort the transaction
     await session.abortTransaction();
@@ -176,7 +197,10 @@ const deleteVote = async (blogId: string, userId: string) => {
   session.startTransaction();
 
   try {
-    const vote = await Vote.findOne({blog:blogId,user:userId}).session(session);
+    const user = await validateUserAndStatus(userId);
+    const vote = await Vote.findOne({ blog: blogId, user: userId }).session(
+      session
+    );
 
     if (!vote) {
       throw new AppError(httpStatus.NOT_FOUND, "Vote not found");
@@ -191,6 +215,9 @@ const deleteVote = async (blogId: string, userId: string) => {
 
     // Update the post's vote count before removing
     const blog = await BlogModel.findById(vote.blog).session(session);
+    if (!blog) {
+      throw new AppError(httpStatus.NOT_FOUND, "Opps! ubBlog is not found");
+    }
 
     if (blog) {
       if (vote.voteType === "upvote") {
@@ -200,6 +227,18 @@ const deleteVote = async (blogId: string, userId: string) => {
       }
       await blog.save({ session });
     }
+
+    await createAnalyticsRecord(
+      {
+        userName: user.name,
+        resourceName: blog?.title as string,
+        description: `${user.name} removed a vote from ${blog.title}`,
+        blog: new mongoose.Types.ObjectId(blogId),
+        user: new mongoose.Types.ObjectId(userId),
+        actionType: "downvote",
+      },
+      session
+    );
 
     // Remove the vote
     await Vote.deleteOne({ _id: vote._id }).session(session);

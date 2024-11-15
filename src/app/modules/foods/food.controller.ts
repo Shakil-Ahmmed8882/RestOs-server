@@ -48,9 +48,27 @@ const handleGetTopFoods = catchAsync(async (req, res) => {
   });
 });
 
+
+
+const handleUpdateFood = catchAsync(async (req, res) => {
+  const blog = req.body;
+  const file = req.file;
+  const {foodId} = req.params;
+
+  const result = await foodServices.updateFood(foodId,file, blog);
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Blog created successfully",
+    data: result,
+  });
+});
+
 export const foodControllers = {
   handleCreateFood,
   handleGetSingleFood,
   handleGetAllFoods,
-  handleGetTopFoods
+  handleGetTopFoods,
+  handleUpdateFood
 };

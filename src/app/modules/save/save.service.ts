@@ -20,7 +20,7 @@ const saveBlog = async (userId: string, blogId: string): Promise<any> => {
   session.startTransaction();
 
   try {
-    await validateUserAndStatus(userId);
+    const user = await validateUserAndStatus(userId);
     const blog = await validateBlogExistence(blogId);
 
     const alreadySavedBlog = await Save.findOne({
@@ -48,14 +48,17 @@ const saveBlog = async (userId: string, blogId: string): Promise<any> => {
     if (result) {
       await createAnalyticsRecord(
         {
-          name: blog.title,
+          userName:user.name,
+          resourceName:blog.title,
+          description:`${user.name} saved ${blog.title}`,
           blog: new mongoose.Types.ObjectId(blogId),
           user: new mongoose.Types.ObjectId(userId),
-          actionType: "save-blog",
+          actionType: "unsave-blog",
         },
         session
       );
     }
+    
 
     await session.commitTransaction();
     session.endSession();
@@ -79,7 +82,7 @@ const unsaveBlog = async (userId: string, blogId: string): Promise<any> => {
   session.startTransaction();
 
   try {
-    await validateUserAndStatus(userId);
+    const user = await validateUserAndStatus(userId);
     const blog = await validateBlogExistence(blogId);
 
     const deletionResult = await Save.deleteOne(
@@ -94,7 +97,9 @@ const unsaveBlog = async (userId: string, blogId: string): Promise<any> => {
     if (deletionResult.deletedCount > 0) {
       await createAnalyticsRecord(
         {
-          name:blog.title,
+          userName:user.name,
+          resourceName:blog.title,
+          description:`${user.name} unsaved ${blog.title}`,
           blog: new mongoose.Types.ObjectId(blogId),
           user: new mongoose.Types.ObjectId(userId),
           actionType: "unsave-blog",

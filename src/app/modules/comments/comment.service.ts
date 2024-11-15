@@ -52,7 +52,9 @@ const createComment = async (userId: string, comment: IComment) => {
     if (commentResult.length > 0) {
       await createAnalyticsRecord(
         {
-          name: blog.title,
+          userName: user?.name,
+          resourceName: blog.title,
+          description: `${user.name} commented on ${blog.title}`,
           blog: commentResult[0]._id.toString(),
           user: new Types.ObjectId(userId),
           actionType: "comment",
@@ -79,7 +81,7 @@ const findCommentById = async (commentId: string) => {
 };
 
 const getAllComments = async (query: Record<string, unknown>) => {
-  const commentQuery = new QueryBuilder(Comment.find(), query)
+  const commentQuery = new QueryBuilder(Comment.find().populate("user"), query)
     .filter()
     .sort()
     .paginate()
