@@ -12,16 +12,16 @@ const reviewSchema = new Schema<TReview>({
 // Mongoose schema for FoodData
 const foodDataSchema = new Schema<TFoodData>({
   foodName: { type: String, required: true },
-  status: { type: String }, // Optional field
+  status: { type: String,required:false, default:"available" }, 
   foodImage: { type: String, required: true },
   foodCategory: { type: String, required: true },
   price: { type: Number, required: true },
-  orders: { type: Number, required: true },
+  orders: { type: Number, default: 0 },
   quantity: { type: Number, required: true },
   made_by: { type: String, required: true },
   food_origin: { type: String, required: true },
   description: { type: String, required: true },
-  reviews: { type: [reviewSchema], required: true },
+  reviews: { type: [reviewSchema], default:[] },
 });
 
 // Mongoose model for FoodData

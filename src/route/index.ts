@@ -10,6 +10,7 @@ import { replyRoutes } from "../app/modules/reply/reply.route";
 import { voteRoutes } from "../app/modules/vote/vote.route";
 import { saveRoutes } from "../app/modules/save/save.route";
 import { analyticRoutes } from "../app/modules/analytics/analytics.route";
+import { foodCategoryRoutes } from "../app/modules/food-category/foodCategory.route";
 
 const router = Router();
 
@@ -25,6 +26,10 @@ const moduleRoutes = [
   {
     path: "/foods",
     route: foodRoutes,
+  },
+  {
+    path: "/food-categories",
+    route: foodCategoryRoutes,
   },
   {
     path: "/orders",

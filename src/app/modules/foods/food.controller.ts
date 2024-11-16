@@ -4,16 +4,20 @@ import sendResponse from "../../utils/sendResponse";
 import { foodServices } from "./food.service";
 
 const handleCreateFood = catchAsync(async (req, res) => {
-  const food = req.body;
-  const result = await foodServices.createFood(food);
+  const newFood = req.body;
+  const file = req.file;
+
+  const result = await foodServices.createFood(file, newFood);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "food is create successfully",
+    message: "Food created successfully",
     data: result,
   });
 });
+
+
 
 const handleGetSingleFood = catchAsync(async (req, res) => {
   const { foodId } = req.params;
@@ -33,7 +37,8 @@ const handleGetAllFoods = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "retrieved all foods successfully",
-    data: result,
+    data: result.data,
+    meta: result.meta,
   });
 });
 
@@ -51,16 +56,31 @@ const handleGetTopFoods = catchAsync(async (req, res) => {
 
 
 const handleUpdateFood = catchAsync(async (req, res) => {
-  const blog = req.body;
+  const updatedFood = req.body;
   const file = req.file;
   const {foodId} = req.params;
 
-  const result = await foodServices.updateFood(foodId,file, blog);
+  const result = await foodServices.updateFood(foodId,file, updatedFood);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "Blog created successfully",
+    message: "Food Updated successfully",
+    data: result,
+  });
+});
+
+
+const handleDeleteFood = catchAsync(async (req, res) => {
+  const {foodId} = req.params;
+
+  const result = await foodServices.deleteFood(foodId);
+
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Food deleted successfully",
     data: result,
   });
 });
@@ -70,5 +90,6 @@ export const foodControllers = {
   handleGetSingleFood,
   handleGetAllFoods,
   handleGetTopFoods,
-  handleUpdateFood
+  handleUpdateFood,
+  handleDeleteFood
 };

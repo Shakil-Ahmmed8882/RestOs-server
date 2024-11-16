@@ -7,19 +7,16 @@ const reviewSchema = z.object({
   date: z.string(),
 });
 
-const foodValidationSchema = z.object({
+const createFoodValidationSchema = z.object({
   body: z.object({
     foodName: z.string(),
     status: z.string().optional(),
-    foodImage: z.string().url(),
     foodCategory: z.string(),
     price: z.number().positive(),
-    orders: z.number().nonnegative(),
     quantity: z.number().nonnegative(),
     made_by: z.string(),
     food_origin: z.string(),
     description: z.string(),
-    reviews: z.array(reviewSchema),
   }),
 });
 
@@ -40,6 +37,6 @@ const foodUpdateValidationSchema = z.object({
 });
 
 export const foodValidations = {
-  foodValidationSchema,
+  createFoodValidationSchema,
   foodUpdateValidationSchema,
 };
