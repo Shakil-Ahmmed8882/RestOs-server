@@ -26,6 +26,9 @@ const blogSchema = new Schema<IBlog>({
   updatedAt: { type: Date, default: Date.now },
 });
 
+blogSchema.index ({title: 1});
+
+
 // Mongoose model for Blog
 const BlogModel = mongoose.model<IBlog>("Blog", blogSchema);
 

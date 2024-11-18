@@ -12,9 +12,9 @@ router.post(
   validateRequest(userValidations.createUserValidationSchema),
   userControllers.handleCreateUser
 );
-router.get("/",auth(USER_ROLE.USER), userControllers.handleGetAllUsers);
-router.get("/single-user",auth(USER_ROLE.USER), userControllers.HandleGetSingleUser);
-router.patch("/:userId",auth(USER_ROLE.USER), validateRequest(userValidations.updateUserValidationSchema), userControllers.handleUpdateUser);
-router.delete("/:userId",auth(USER_ROLE.USER), userControllers.handleDeleteUser);
+router.get("/",auth(USER_ROLE.USER,USER_ROLE.ADMIN), userControllers.handleGetAllUsers);
+router.get("/single-user",auth(USER_ROLE.USER,USER_ROLE.ADMIN), userControllers.HandleGetSingleUser);
+router.patch("/:userId",auth(USER_ROLE.USER,USER_ROLE.ADMIN), validateRequest(userValidations.updateUserValidationSchema), userControllers.handleUpdateUser);
+router.delete("/:userId",auth(USER_ROLE.USER,USER_ROLE.ADMIN), userControllers.handleDeleteUser);
 
 export const userRoutes = router;

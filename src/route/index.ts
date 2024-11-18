@@ -11,6 +11,7 @@ import { voteRoutes } from "../app/modules/vote/vote.route";
 import { saveRoutes } from "../app/modules/save/save.route";
 import { analyticRoutes } from "../app/modules/analytics/analytics.route";
 import { foodCategoryRoutes } from "../app/modules/food-category/foodCategory.route";
+import { searchRoutes } from "../app/modules/search/search.route";
 
 const router = Router();
 
@@ -58,6 +59,10 @@ const moduleRoutes = [
   {
     path: "/analytics",
     route: analyticRoutes,
+  },
+  {
+    path: "/search",
+    route: searchRoutes,
   },
   {
     path: "/tests",

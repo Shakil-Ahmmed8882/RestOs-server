@@ -83,6 +83,19 @@ const getAllOrders = async (query: Record<string, unknown>) => {
   };
 };
 
+
+
+const updateOrder = async (id: string,payload: Partial<TOrder>) => {
+
+  const order = await OrdersModel.findById(id)
+  if(!order){
+    throw new AppError(httpStatus.NOT_FOUND,"Oppps! Order is not found!")
+  }
+  const result = OrdersModel.findByIdAndUpdate(id, {...payload})
+  return result;
+};
+
+
 const deleteOrder = async (orderId: string) => {
   const session = await startSession();
   session.startTransaction();
@@ -155,4 +168,5 @@ export const OrderServiices = {
   getAllOrders,
   deleteOrder,
   getOrderSummaryOfSingleUser,
+  updateOrder
 };

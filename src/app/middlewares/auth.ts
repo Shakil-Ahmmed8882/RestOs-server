@@ -9,18 +9,20 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
     const token = req.headers.authorization;
     
     const { decoded } = await validateTokenAndFetchUser(token!);
-    
+    const decodedRole = await decoded.role
       
-      console.log({decoded})
-    // Check if role matches required roles
+
+    
+    // console.log(decodedRole)
+    // console.log(decodedRole)
+    // console.log(requiredRoles)
     if (
-      requiredRoles.length &&
-      !requiredRoles.includes(decoded.role as keyof typeof USER_ROLE)
-    ) {
+      requiredRoles.length &&!requiredRoles.includes(decodedRole)) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
     }
     
   
+
     
     // Attach the user and role to the request object for further use
     req.user = {

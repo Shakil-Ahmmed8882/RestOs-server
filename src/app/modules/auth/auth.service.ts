@@ -148,8 +148,7 @@ const registerUser = async (userData: TLoginUser) => {
       [
         {
           ...userData,
-          photo: userData.photo || demoProfileUrl,
-          role: USER_ROLE.USER,
+          photo: userData.photo || demoProfileUrl
         },
       ],
       { session }

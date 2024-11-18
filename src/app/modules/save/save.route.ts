@@ -9,7 +9,7 @@ const router = Router();
 // Save a blog post for a user
 router.post(
   '/:blogId/save',
-  auth(USER_ROLE.USER),                 
+  auth(USER_ROLE.USER,USER_ROLE.ADMIN),                 
   saveControllers.saveBlog
 );
 
@@ -24,7 +24,7 @@ router.get(
 // Check if a blog is saved by a user
 router.get(
   '/:blogId/is-saved',
-  auth(USER_ROLE.USER),
+  auth(USER_ROLE.ADMIN,USER_ROLE.USER),
   saveControllers.isBlogSavedByUser
 );
 

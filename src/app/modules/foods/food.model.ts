@@ -24,7 +24,8 @@ const foodDataSchema = new Schema<TFoodData>({
   reviews: { type: [reviewSchema], default:[] },
 });
 
-// Mongoose model for FoodData
+
+foodDataSchema.index({foodName:1, foodCategory:1})
 
 const FoodModel = mongoose.model<TFoodData>("Food", foodDataSchema);
 

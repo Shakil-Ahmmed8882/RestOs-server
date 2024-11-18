@@ -24,7 +24,7 @@ const getAllUsers = async (query: Record<string, unknown>) => {
     "name",
     "email",
     "contactNumber",
-  ]);
+  ]).fields().filter().paginate();
   const result = await userModelQuery.modelQuery;
   const meta = await userModelQuery.countTotal();
 
