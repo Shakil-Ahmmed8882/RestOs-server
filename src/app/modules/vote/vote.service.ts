@@ -165,6 +165,10 @@ const getAllVotesOnSingleBlog = async (
   };
 };
 
+
+
+
+
 const getSingleVoteOfSingleUser = async (blogId: string, userId: string) => {
   // Start a session for the transaction
   const session = await mongoose.startSession();
@@ -177,10 +181,14 @@ const getSingleVoteOfSingleUser = async (blogId: string, userId: string) => {
       throw new AppError(httpStatus.NOT_FOUND, "Blog not found");
     }
 
-    const vote = await Vote.findOne({ blog: blogId, user: userId });
+    // Find the vote for the given user and blog
+    const vote = await Vote.findOne({ blog: blogId, user: userId }).session(session);
 
+    // Commit the transaction only after the operations are complete
     await session.commitTransaction();
-    return { voteType: vote.voteType };
+
+    // Return the voteType if everything is successful
+    return { voteType: vote?.voteType }; // Safely access voteType in case vote is null
   } catch (error) {
     // If there's an error, abort the transaction
     await session.abortTransaction();
@@ -190,6 +198,10 @@ const getSingleVoteOfSingleUser = async (blogId: string, userId: string) => {
     session.endSession();
   }
 };
+
+
+
+
 
 const deleteVote = async (blogId: string, userId: string) => {
   // Start a session for the transaction

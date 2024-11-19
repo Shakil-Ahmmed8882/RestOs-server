@@ -34,9 +34,9 @@ export const getGlobalSearchResults = async (query: Record<string, any>) => {
   // Execute all the aggregation pipelines concurrently using Promise.all.
   // This fetches the results from all models in parallel, improving performance.
   const [blogs, foods, foodCategories] = await Promise.all([
-    BlogModel.aggregate(pipelines.blogs), // Retrieve blog results
-    FoodModel.aggregate(pipelines.foods), // Retrieve food results
-    FoodCategoryModel.aggregate(pipelines.foodCategories), // Retrieve food category results
+    BlogModel.aggregate(pipelines.blogs), 
+    FoodModel.aggregate(pipelines.foods), 
+    FoodCategoryModel.aggregate(pipelines.foodCategories),
   ]);
 
   // Prepare the final output:

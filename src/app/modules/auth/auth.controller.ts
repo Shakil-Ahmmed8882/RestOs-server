@@ -3,12 +3,19 @@ import AppError from '../../errors/AppError';
 import catchAsync from '../../utils/catchAsync';
 import { AuthServices } from './auth.service';
 import sendResponse from '../../utils/sendResponse';
+import config from '../../config';
 
 
 const loginUser = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUser(req.body);
   const { refreshToken, accessToken } = result;
 
+  res.cookie("refreshToken",refreshToken,{
+    httpOnly: true,
+    secure: config.NODE_ENV === 'production'
+  });
+
+  
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -22,7 +29,11 @@ const loginUser = catchAsync(async (req, res) => {
 
 const refreshToken = catchAsync(async (req, res) => {
   const { refreshToken } = req.cookies;
+
+  
+  console.log("_______________>>>>>>>>>>>>", refreshToken)
   const result = await AuthServices.refreshToken(refreshToken);
+
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -33,6 +44,15 @@ const refreshToken = catchAsync(async (req, res) => {
 });
 const registerUser = catchAsync(async (req, res) => {
   const result = await AuthServices.registerUser(req.body);
+
+
+
+  
+  res.cookie("refreshToken",result?.refreshToken,{
+    httpOnly: true,
+    secure: config.NODE_ENV === 'production'
+  });
+
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

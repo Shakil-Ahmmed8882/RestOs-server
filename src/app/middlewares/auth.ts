@@ -10,12 +10,8 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
     
     const { decoded } = await validateTokenAndFetchUser(token!);
     const decodedRole = await decoded.role
-      
-
     
-    // console.log(decodedRole)
-    // console.log(decodedRole)
-    // console.log(requiredRoles)
+    
     if (
       requiredRoles.length &&!requiredRoles.includes(decodedRole)) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');

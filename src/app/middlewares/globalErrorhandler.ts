@@ -13,6 +13,9 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   let message = 'Something went wrong!';
   let errorSources: TErrorSources = [{ path: '', message: 'Something went wrong' }];
 
+  
+  
+
   if (err instanceof ZodError) {
     const simplifiedError = handleZodError(err);
     statusCode = simplifiedError?.statusCode;
@@ -33,6 +36,10 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     statusCode = simplifiedError?.statusCode;
     message = simplifiedError?.message;
     errorSources = simplifiedError?.errorSources;
+  } else if (err.name === "JsonWebTokenError") {
+    statusCode = 401;
+    message = err.message
+    errorSources = err
   } else if (err instanceof AppError) {
     statusCode = err?.statusCode;
     message = err.message;
