@@ -11,7 +11,6 @@ const userSchema = new Schema<TUser>({
   role: {
     type: String,
     enum: [USER_ROLE.ADMIN, USER_ROLE.USER],
-    // default: USER_ROLE.USER  
     default: USER_ROLE.USER  
   },
   status: {

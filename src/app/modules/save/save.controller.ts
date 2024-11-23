@@ -42,7 +42,6 @@ const unsaveBlog = catchAsync(async (req, res) => {
  */
 const getUserSavedBlogs = catchAsync(async (req, res) => {
   const userId = req.user.userId;
-
   const result = await saveServices.getUserSavedBlogs(userId,req.query);
 
   sendResponse(res, {

@@ -22,8 +22,6 @@ const addReplyToComment = async (
   try {
     session.startTransaction();
 
-    console.log({ payload });
-
     // Check if the user exists
     const user = await UserModel.findById(userId);
     if (!user) {
