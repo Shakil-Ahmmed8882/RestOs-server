@@ -1,4 +1,4 @@
-import mongoose, { Error, Schema, startSession } from "mongoose";
+import { Error, startSession } from "mongoose";
 import QueryBuilder from "../../builder/QueryBuilder";
 import OrdersModel from "./order.model";
 import UserModel from "../user/user.model";
@@ -6,7 +6,6 @@ import { TOrder } from "./order.interface";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import FoodModel from "../foods/food.model";
-import { USER_STATUS } from "../../constants";
 
 /**
  * Creates an order and associates it with a user.
@@ -16,53 +15,71 @@ import { USER_STATUS } from "../../constants";
  * @returns The created order.
  * @throws Will throw an error if the user is not found or if any database operation fails.
  */
-const createOrder = async (payload: TOrder) => {
-  // Start a new session for the transaction
+
+const createOrders = async (payload: { cartItems: TOrder[] }) => {
   const session = await startSession();
   session.startTransaction();
+  const { cartItems } = payload;
 
   try {
-    // Find the user by email and
-    //include the session in the query
-    const user = await UserModel.findById(payload.user).session(session);
-    if (!user) {
-      throw new Error("User not found!");
-    }
-    if (user.status !== USER_STATUS.ACTIVE) {
-      throw new Error("User not active!");
-    }
+    const createdOrders: any[] = [];
+    for (const item of cartItems) {
+      // Check if user exists and is active
+      const user = await UserModel.findById(item.user).session(session);
+      if (!user) {
+        throw new Error(`User with ID ${item.user} not found!`);
+      }
+      if (user.status !== "ACTIVE") {
+        throw new Error(`User with ID ${item.user} is not active!`);
+      }
 
-    const food = await FoodModel.findById(payload.food).session(session);
-    if (!food) {
-      throw new Error("Food not found!");
+      // Check if food exists
+      const food = await FoodModel.findById(item.food).session(session);
+      if (!food) {
+        throw new Error(`Food with ID ${item.food} not found!`);
+      }
+
+      // Check if the item is already ordered
+      const existingOrder = await OrdersModel.findOne({
+        food: item.food,
+        user: item.user,
+      }).session(session);
+
+      // we are not throwing error because in array maybe some order are not duplicated
+      // so we are just creating thos that are unique
+      if (!existingOrder) {
+        // Check if enough quantity is available
+        if (food.quantity >= item.quantity) {
+          // Deduct the quantity of food
+          food.quantity -= item.quantity;
+          await food.save({ session });
+
+          const orderPayload = {
+            ...item,
+            status: "pending",
+          };
+
+          // Create the order
+          const result = await OrdersModel.create([orderPayload], { session });
+          createdOrders.push(result);
+        }
+      }
     }
-
-    const products = await OrdersModel.findOne({
-      food: payload.food,
-      user: payload.user,
-    });
-
-    // check no duplicate order
-    if (products) {
-      throw new Error("Opps! this product is already ordered");
-    }
-
-    // Create the order in the Orders collection
-    const result = await OrdersModel.create([payload], { session });
 
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();
 
-    return result;
-  } catch (error) {
-    // Abort the transaction in case of error
+    return createdOrders;
+  } catch (error: any) {
+    // Rollback the transaction in case of an error
     await session.abortTransaction();
     session.endSession();
-    console.log(error);
-    throw error;
+    console.error(error);
+    throw new Error(`Failed to create orders: ${error.message}`);
   }
 };
+
 const getSingleOrder = async (id: string) => {
   const result = OrdersModel.findById(id).populate("food").populate("user");
   return result;
@@ -83,27 +100,22 @@ const getAllOrders = async (query: Record<string, unknown>) => {
   };
 };
 
-
-
-const updateOrder = async (id: string,payload: Partial<TOrder>) => {
-
-  const order = await OrdersModel.findById(id)
-  if(!order){
-    throw new AppError(httpStatus.NOT_FOUND,"Oppps! Order is not found!")
+const updateOrder = async (id: string, payload: Partial<TOrder>) => {
+  const order = await OrdersModel.findById(id);
+  if (!order) {
+    throw new AppError(httpStatus.NOT_FOUND, "Oppps! Order is not found!");
   }
-  const result = OrdersModel.findByIdAndUpdate(id, {...payload})
+  const result = OrdersModel.findByIdAndUpdate(id, { ...payload });
   return result;
 };
-
 
 const deleteOrder = async (orderId: string) => {
   const session = await startSession();
   session.startTransaction();
 
   try {
-    
     const orderDeletionResult = await OrdersModel.deleteOne(
-      { _id:orderId},
+      { _id: orderId },
       {
         session: session,
       }
@@ -163,10 +175,10 @@ const getOrderSummaryOfSingleUser = async (userId: string) => {
 };
 
 export const OrderServiices = {
-  createOrder,
+  createOrder: createOrders,
   getSingleOrder,
   getAllOrders,
   deleteOrder,
   getOrderSummaryOfSingleUser,
-  updateOrder
+  updateOrder,
 };
