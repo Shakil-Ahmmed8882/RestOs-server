@@ -1,0 +1,1049 @@
+{
+  "info": {
+    "name": "RestOS API",
+    "description": "Restaurant Operating System - Complete API Documentation",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\",\n  \"phone\": \"1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auths/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auths", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auths/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auths", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"your-refresh-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auths/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auths", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Forget Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auths/forget-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auths", "forget-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auths/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auths", "reset-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get Single User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/single-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "single-user"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", ":userId"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", ":userId"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Food Categories",
+      "item": [
+        {
+          "name": "Create Food Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Desserts"
+                },
+                {
+                  "key": "description",
+                  "value": "Sweet desserts and pastries"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/food-categories/create-category",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "food-categories", "create-category"]
+            },
+            "description": "Admin only endpoint"
+          }
+        },
+        {
+          "name": "Get All Food Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/food-categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "food-categories"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Food Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/food-categories/:categoryId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "food-categories", ":categoryId"]
+            }
+          }
+        },
+        {
+          "name": "Update Food Category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Updated Category Name"
+                },
+                {
+                  "key": "description",
+                  "value": "Updated description"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/food-categories/:categoryId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "food-categories", ":categoryId"]
+            },
+            "description": "Admin only endpoint"
+          }
+        },
+        {
+          "name": "Delete Food Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/food-categories/:categoryId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "food-categories", ":categoryId"]
+            },
+            "description": "Admin only endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Foods",
+      "item": [
+        {
+          "name": "Create Food",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Biryani"
+                },
+                {
+                  "key": "description",
+                  "value": "Delicious biryani rice"
+                },
+                {
+                  "key": "price",
+                  "value": "350"
+                },
+                {
+                  "key": "category",
+                  "value": "categoryId"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/foods/create-food",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "foods", "create-food"]
+            }
+          }
+        },
+        {
+          "name": "Get All Foods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/foods",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "foods"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Food",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/foods/:foodId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "foods", ":foodId"]
+            }
+          }
+        },
+        {
+          "name": "Update Food",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Updated Food Name"
+                },
+                {
+                  "key": "price",
+                  "value": "400"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/foods/:foodId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "foods", ":foodId"]
+            }
+          }
+        },
+        {
+          "name": "Delete Food",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/foods/:foodId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "foods", ":foodId"]
+            },
+            "description": "Admin only endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-id\",\n  \"items\": [\n    {\n      \"foodId\": \"food-id\",\n      \"quantity\": 2,\n      \"price\": 350\n    }\n  ],\n  \"totalPrice\": 700,\n  \"deliveryAddress\": \"123 Main St\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/create-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "create-order"]
+            }
+          }
+        },
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Order",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:orderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":orderId"]
+            }
+          }
+        },
+        {
+          "name": "Get Order Summary of Single User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/summary/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "summary", ":userId"]
+            }
+          }
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:orderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":orderId"]
+            },
+            "description": "Admin only endpoint"
+          }
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:orderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":orderId"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blogs",
+      "item": [
+        {
+          "name": "Create Blog",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "My First Blog"
+                },
+                {
+                  "key": "content",
+                  "value": "This is the blog content"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blogs/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blogs", "create"]
+            }
+          }
+        },
+        {
+          "name": "Get All Blogs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blogs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blogs"]
+            }
+          }
+        },
+        {
+          "name": "Get Blog By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blogs/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blogs", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Update Blog",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Blog Title\",\n  \"content\": \"Updated content\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blogs/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blogs", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Blog",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blogs/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blogs", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Create Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blogId\": \"blog-id\",\n  \"text\": \"Great blog post!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Get All Comments on Blog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/comments/:blogId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "comments", ":blogId"]
+            }
+          }
+        },
+        {
+          "name": "Get All Comments (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "comments"]
+            },
+            "description": "Admin only endpoint"
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Updated comment text\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/comments/:commentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "comments", ":commentId"]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/comments/:commentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "comments", ":commentId"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replies",
+      "item": [
+        {
+          "name": "Reply to Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Thanks for the comment!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/replies/:commentId/reply",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "replies", ":commentId", "reply"]
+            }
+          }
+        },
+        {
+          "name": "Update Reply",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Updated reply text\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/replies/comments/:commentId/reply/:replyId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "replies", "comments", ":commentId", "reply", ":replyId"]
+            }
+          }
+        },
+        {
+          "name": "Delete Reply",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/replies/comments/:commentId/reply/:replyId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "replies", "comments", ":commentId", "reply", ":replyId"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Votes",
+      "item": [
+        {
+          "name": "Create Vote (Upvote/Downvote)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blogId\": \"blog-id\",\n  \"voteType\": \"upvote\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/votes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "votes"]
+            }
+          }
+        },
+        {
+          "name": "Get All Votes on Blog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/votes/:blogId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "votes", ":blogId"]
+            }
+          }
+        },
+        {
+          "name": "Get Single User Vote on Blog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/votes/single-user/blog/:blogId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "votes", "single-user", "blog", ":blogId"]
+            }
+          }
+        },
+        {
+          "name": "Delete Vote",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/votes/:blogId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "votes", ":blogId"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saves",
+      "item": [
+        {
+          "name": "Save Blog Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/saves/:blogId/save",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "saves", ":blogId", "save"]
+            }
+          }
+        },
+        {
+          "name": "Get User Saved Blogs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/saves",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "saves"]
+            }
+          }
+        },
+        {
+          "name": "Check if Blog is Saved",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/saves/:blogId/is-saved",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "saves", ":blogId", "is-saved"]
+            }
+          }
+        },
+        {
+          "name": "Unsave Blog Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/saves/:blogId/unsave",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "saves", ":blogId", "unsave"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Analytics Summary Matrix",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/matrix",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "matrix"]
+            }
+          }
+        },
+        {
+          "name": "Get User Action Counts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/user/actions-counts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "user", "actions-counts"]
+            }
+          }
+        },
+        {
+          "name": "Get All Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Global Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search?query=search-term&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "search-term"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
