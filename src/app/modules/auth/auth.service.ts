@@ -182,6 +182,13 @@ const registerUser = async (userData: TLoginUser) => {
       return {
         accessToken,
         refreshToken,
+        user: {
+          userId: createdUser._id,
+          name: createdUser.name,
+          email: createdUser.email,
+          role: createdUser.role,
+          photo: createdUser.photo,
+        },
       };
     }
   } catch (error: any) {

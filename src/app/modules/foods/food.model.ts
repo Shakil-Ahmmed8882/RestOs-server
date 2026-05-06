@@ -12,17 +12,22 @@ const reviewSchema = new Schema<TReview>({
 // Mongoose schema for FoodData
 const foodDataSchema = new Schema<TFoodData>({
   foodName: { type: String, required: true },
-  status: { type: String,required:false, default:"available" }, 
+  status: { type: String, required: false, default: "available" },
   foodImage: { type: String, required: true },
   foodCategory: { type: String, required: true },
   price: { type: Number, required: true },
+  discountPercent: { type: Number, default: 0, min: 0, max: 100 },
   orders: { type: Number, default: 0 },
   quantity: { type: Number, required: true },
   made_by: { type: String, required: true },
   food_origin: { type: String, required: true },
   description: { type: String, required: true },
-  reviews: { type: [reviewSchema], default:[] },
-});
+  isVeg: { type: Boolean, default: false },
+  tags: { type: [String], default: [] },
+  preparationTime: { type: Number, default: 15 },
+  reviews: { type: [reviewSchema], default: [] },
+},
+{ timestamps: true });
 
 
 foodDataSchema.index({foodName:1, foodCategory:1})

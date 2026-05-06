@@ -7,15 +7,19 @@ export interface TReview {
   
   export interface TFoodData {
     foodName: string;
-    status?: string; // Optional field
+    status?: string;
     foodImage: string;
     foodCategory: string;
     price: number;
+    discountPercent?: number;
     orders: number;
     quantity: number;
     made_by: string;
     food_origin: string;
     description: string;
+    isVeg?: boolean;
+    tags?: string[];
+    preparationTime?: number;
     reviews: TReview[];
   }
   

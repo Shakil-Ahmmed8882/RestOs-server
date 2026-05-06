@@ -52,18 +52,24 @@ const getTopSellingFood = async (query: Record<string, unknown>) => {
 };
 
 const getAllFoods = async (query: Record<string, unknown>) => {
-  const foodQuery = new QueryBuilder(FoodModel.find(), query)
-    .search(["foodName"])
+  // Build an extra pre-filter for isVeg / tags if provided
+  const preFilter: Record<string, unknown> = {};
+  if (query.isVeg !== undefined) preFilter.isVeg = query.isVeg === "true";
+  if (query.tags) preFilter.tags = { $in: (query.tags as string).split(",") };
+
+  const foodQuery = new QueryBuilder(
+    FoodModel.find(Object.keys(preFilter).length ? preFilter : {}),
+    query
+  )
+    .search(["foodName", "description", "foodCategory", "tags"])
     .filter()
     .sort()
     .paginate()
     .fields();
-const result = await foodQuery.modelQuery
-const meta = await foodQuery.countTotal()
-  return {
-    data:result,
-    meta
-  };
+
+  const result = await foodQuery.modelQuery;
+  const meta   = await foodQuery.countTotal();
+  return { data: result, meta };
 };
 
 const updateFood = async (foodId: string, file: any, payload: TFoodData) => {

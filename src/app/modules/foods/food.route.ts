@@ -17,9 +17,9 @@ router.post(
   foodControllers.handleCreateFood
 );
 
+router.get("/top-selling-food", foodControllers.handleGetTopFoods);
 router.get("/", foodControllers.handleGetAllFoods);
 router.get("/:foodId", foodControllers.handleGetSingleFood);
-router.get("/top-selling-food", foodControllers.handleGetSingleFood);
 router.patch(
   "/:foodId",
   upload.single("file"),
