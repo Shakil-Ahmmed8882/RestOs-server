@@ -3,23 +3,43 @@ import nodemailer from 'nodemailer';
 import config from '../config';
 
 export const sendEmail = async (to: string, html: string) => {
+  try {
+    console.log('📧 Starting email send...');
+    console.log('SMTP Config:', {
+      host: config.smtp_host,
+      port: config.smtp_port,
+      user: config.smtp_user,
+      NODE_ENV: config.NODE_ENV,
+    });
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com.',
-    port: 587,
-    secure: config.NODE_ENV === 'production',
-    auth: {
-      // TODO: replace `user` and `pass` values from <https://forwardemail.net>
-      user: 'shakilahmmed8882@gmail.com',
-      pass: 'ubcp qxev yxhu gkll',
-    },
-  });
+    const transporter = nodemailer.createTransport({
+      host: config.smtp_host,
+      port: config.smtp_port,
+      secure: config.NODE_ENV === 'production',
+      auth: {
+        user: config.smtp_user,
+        pass: config.smtp_pass,
+      },
+    });
 
-  await transporter.sendMail({
-    from: 'shakilahmmed8882@gmail.com', // sender address
-    to, // list of receivers
-    subject: 'Reset your password within 10 minutes!', // Subject line
-    text: '', // plain text body
-    html, // html body
-  });
+    console.log('✅ Transporter created');
+
+    const mailOptions = {
+      from: config.smtp_user,
+      to,
+      subject: 'Reset your password within 10 minutes!',
+      text: '',
+      html,
+    };
+
+    console.log('📤 Sending email to:', to);
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully:', result.response);
+
+    return result;
+  } catch (error: any) {
+    console.error('❌ Email sending failed:', error.message);
+    console.error('Full error:', error);
+    throw error;
+  }
 };

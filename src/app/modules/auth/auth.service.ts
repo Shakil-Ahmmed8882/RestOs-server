@@ -224,9 +224,9 @@ const createUser = async (userData: TLoginUser) => {
   return user;
 };
 
-const forgetPassword = async (userId: string) => {
+const forgetPassword = async (email: string) => {
   // checking if the user is exist
-  const user = await UserModel.findById(userId);
+  const user = await UserModel.findOne({ email });
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
@@ -253,9 +253,53 @@ const forgetPassword = async (userId: string) => {
     "10m"
   );
 
-  const resetUILink = `${config.reset_pass_ui_link}?id=${user._id}&token=${resetToken} `;
+  const resetUILink = `${config.reset_pass_ui_link}?id=${user._id}&token=${resetToken}`;
 
-  sendEmail(user.email, resetUILink);
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; border-radius: 8px;">
+      <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="color: #333; margin-bottom: 20px;">Password Reset Request</h2>
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          Hello ${user.name},
+        </p>
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
+          You requested a password reset. Click the button below to reset your password. This link will expire in <strong>10 minutes</strong>.
+        </p>
+        <div style="text-align: center; margin-bottom: 30px;">
+          <a href="${resetUILink}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            Reset Password
+          </a>
+        </div>
+        <p style="color: #666; font-size: 12px; margin-bottom: 15px;">
+          Or copy and paste this link in your browser:
+        </p>
+        <p style="color: #007bff; font-size: 12px; word-break: break-all; margin-bottom: 30px;">
+          ${resetUILink}
+        </p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; margin-bottom: 10px;">
+          If you didn't request this password reset, please ignore this email.
+        </p>
+        <p style="color: #999; font-size: 12px;">
+          For security, never share this link with anyone.
+        </p>
+      </div>
+      <p style="color: #999; font-size: 11px; text-align: center; margin-top: 20px;">
+        © RestOS. All rights reserved.
+      </p>
+    </div>
+  `;
+
+  try {
+    await sendEmail(user.email, emailHtml);
+    console.log('✅ Password reset email sent to:', user.email);
+  } catch (error: any) {
+    console.error('❌ Failed to send reset email:', error.message);
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to send reset email. Please try again.'
+    );
+  }
 };
 
 const resetPassword = async (
