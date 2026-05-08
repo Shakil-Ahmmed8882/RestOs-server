@@ -43,16 +43,12 @@ const refreshToken = catchAsync(async (req, res) => {
   });
 });
 const registerUser = catchAsync(async (req, res) => {
-  const result = await AuthServices.registerUser(req.body);
+  const result = await AuthServices.registerUser(req.body, req.file);
 
-
-
-  
   res.cookie("refreshToken",result?.refreshToken,{
     httpOnly: true,
     secure: config.NODE_ENV === 'production'
   });
-
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -65,7 +61,7 @@ const registerUser = catchAsync(async (req, res) => {
 
 
 const forgetPassword = catchAsync(async (req, res) => {
-  const userId = req.body.userId;
+  const userId = (req.user as any)?.userId;
   const result = await AuthServices.forgetPassword(userId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -79,17 +75,15 @@ const forgetPassword = catchAsync(async (req, res) => {
 const resetPassword = catchAsync(async (req, res) => {
   const token = req.headers.authorization;
 
-
   if (!token) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Something went wrong !');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Reset token is required!');
   }
-  
 
   const result = await AuthServices.resetPassword(req.body, token);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Password reset succesfully!',
+    message: 'Password reset successfully!',
     data: result,
   });
 });

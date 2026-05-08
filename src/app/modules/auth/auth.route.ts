@@ -2,6 +2,8 @@ import express from 'express';
 import validateRequest from '../../middlewares/validateRequest';
 import { AuthValidation } from './auth.validation';
 import { AuthControllers } from './auth.controller';
+import { upload } from '../../utils/sendImageToCloudinary';
+import auth from '../../middlewares/auth';
 
 
 const router = express.Router();
@@ -14,6 +16,7 @@ router.post(
 
 router.post(
   '/register',
+  upload.single('photo'),
   validateRequest(AuthValidation.registerUserValidationSchema),
   AuthControllers.registerUser,
 );
@@ -28,7 +31,7 @@ router.post(
 
 router.post(
   '/forget-password',
-  validateRequest(AuthValidation.forgetPasswordValidationSchema),
+  auth(),
   AuthControllers.forgetPassword,
 );
 

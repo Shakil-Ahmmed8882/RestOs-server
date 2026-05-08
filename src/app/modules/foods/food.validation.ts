@@ -19,8 +19,12 @@ const createFoodValidationSchema = z.object({
     food_origin: z.string(),
     description: z.string(),
     isVeg: z.boolean().optional(),
+    isSpicy: z.boolean().optional(),
+    isGlutenFree: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
     preparationTime: z.number().nonnegative().optional(),
+    cuisine: z.string().optional(),
+    bestseller: z.boolean().optional(),
   }),
 });
 
@@ -38,13 +42,27 @@ const foodUpdateValidationSchema = z.object({
     food_origin: z.string().optional(),
     description: z.string().optional(),
     isVeg: z.boolean().optional(),
+    isSpicy: z.boolean().optional(),
+    isGlutenFree: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
     preparationTime: z.number().nonnegative().optional(),
+    cuisine: z.string().optional(),
+    bestseller: z.boolean().optional(),
     reviews: z.array(reviewSchema).optional(),
+  }),
+});
+
+const addReviewValidationSchema = z.object({
+  body: z.object({
+    customer_name: z.string().min(1),
+    rating: z.number().min(0).max(5),
+    comment: z.string().min(1),
+    date: z.string(),
   }),
 });
 
 export const foodValidations = {
   createFoodValidationSchema,
   foodUpdateValidationSchema,
+  addReviewValidationSchema,
 };

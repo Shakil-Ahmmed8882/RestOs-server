@@ -21,7 +21,6 @@ export const registerUserValidationSchema = z.object({
   body: z.object({
     name: z.string(),
     email: z.string().email(),
-    photo: z.string().optional(), 
     password: z.string().optional(),
   }),
 });
@@ -29,11 +28,7 @@ export const registerUserValidationSchema = z.object({
 
 
 const forgetPasswordValidationSchema = z.object({
-  body: z.object({
-    userId: z.string({
-      required_error: 'User id is required!',
-    }),
-  }),
+  body: z.object({}).strict(),
 });
 
 const resetPasswordValidationSchema = z.object({

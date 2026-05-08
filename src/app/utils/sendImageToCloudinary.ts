@@ -10,6 +10,7 @@ cloudinary.config({
 });
 
 
+
 export const sendImageToCloudinary = (
   imageName: string,
   path: string,

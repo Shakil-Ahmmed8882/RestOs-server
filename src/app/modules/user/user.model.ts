@@ -4,9 +4,9 @@ import { TUser } from "./user.interface";
 import { USER_ROLE, USER_STATUS } from "../../constants";
 
 const userSchema = new Schema<TUser>({
-  name: { type: String, required:true },  
-  password: { type: String, required:true },  
-  email: { type: String, unique: true, required:true },  
+  name: { type: String, required:true },
+  password: { type: String },
+  email: { type: String, unique: true, required:true },
   photo: { type: String, required:true }, 
   role: {
     type: String,

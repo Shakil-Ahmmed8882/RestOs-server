@@ -52,10 +52,66 @@ const getTopSellingFood = async (query: Record<string, unknown>) => {
 };
 
 const getAllFoods = async (query: Record<string, unknown>) => {
-  // Build an extra pre-filter for isVeg / tags if provided
+  // Build comprehensive pre-filters
   const preFilter: Record<string, unknown> = {};
+
+  // Boolean filters
   if (query.isVeg !== undefined) preFilter.isVeg = query.isVeg === "true";
-  if (query.tags) preFilter.tags = { $in: (query.tags as string).split(",") };
+  if (query.isSpicy !== undefined) preFilter.isSpicy = query.isSpicy === "true";
+  if (query.isGlutenFree !== undefined) preFilter.isGlutenFree = query.isGlutenFree === "true";
+  if (query.bestseller !== undefined) preFilter.bestseller = query.bestseller === "true";
+
+  // Rating filter
+  if (query.minRating) {
+    const minRating = parseFloat(query.minRating as string);
+    if (!isNaN(minRating)) {
+      preFilter.averageRating = { $gte: minRating };
+    }
+  }
+
+  // Price range filter
+  if (query.minPrice || query.maxPrice) {
+    preFilter.price = {};
+    if (query.minPrice) {
+      (preFilter.price as any).$gte = parseFloat(query.minPrice as string);
+    }
+    if (query.maxPrice) {
+      (preFilter.price as any).$lte = parseFloat(query.maxPrice as string);
+    }
+  }
+
+  // Preparation time filter
+  if (query.maxPrepTime) {
+    const maxTime = parseInt(query.maxPrepTime as string);
+    if (!isNaN(maxTime)) {
+      preFilter.preparationTime = { $lte: maxTime };
+    }
+  }
+
+  // Tags/ingredients filter
+  if (query.tags) {
+    preFilter.tags = { $in: (query.tags as string).split(",") };
+  }
+
+  // Discount filter
+  if (query.hasDiscount === "true") {
+    preFilter.discountPercent = { $gt: 0 };
+  }
+
+  // Stock availability filter
+  if (query.inStock === "true") {
+    preFilter.quantity = { $gt: 0 };
+  }
+
+  // Cuisine filter
+  if (query.cuisine) {
+    preFilter.cuisine = query.cuisine;
+  }
+
+  // Status filter
+  if (query.status) {
+    preFilter.status = query.status;
+  }
 
   const foodQuery = new QueryBuilder(
     FoodModel.find(Object.keys(preFilter).length ? preFilter : {}),
@@ -68,7 +124,7 @@ const getAllFoods = async (query: Record<string, unknown>) => {
     .fields();
 
   const result = await foodQuery.modelQuery;
-  const meta   = await foodQuery.countTotal();
+  const meta = await foodQuery.countTotal();
   return { data: result, meta };
 };
 
@@ -130,6 +186,33 @@ const deleteFood = async (foodId: string) => {
   }
 };
 
+const addReview = async (foodId: string, reviewData: any) => {
+  const session = await mongoose.startSession();
+
+  session.startTransaction();
+
+  try {
+    const food = await FoodModel.findById(foodId, {}, { session });
+
+    if (!food) {
+      throw new Error("Food not found");
+    }
+
+    food.reviews.push(reviewData);
+
+    const updatedFood = await food.save({ session });
+
+    await session.commitTransaction();
+    return updatedFood;
+  } catch (error: any) {
+    await session.abortTransaction();
+    console.error("Error adding review:", error.message);
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
 export const foodServices = {
   createFood,
   getSingleFood,
@@ -137,4 +220,5 @@ export const foodServices = {
   getAllFoods,
   updateFood,
   deleteFood,
+  addReview,
 };

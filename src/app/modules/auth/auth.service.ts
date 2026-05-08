@@ -14,6 +14,7 @@ import { createToken, verifyToken } from "./auth.utils";
 import { demoProfileUrl } from "../../shared";
 import { USER_ROLE } from "../../constants";
 import { sendEmail } from "../../utils/sendEmail";
+import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
 
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
@@ -122,33 +123,40 @@ const refreshToken = async (token: string) => {
   };
 };
 
-const registerUser = async (userData: TLoginUser) => {
-  // post and record it as analytics
+const registerUser = async (userData: TLoginUser, file?: Express.Multer.File) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
 
-    // when select manual signup there must be passoword
     const existedUser = await UserModel.findOne({ email: userData.email });
 
     if (existedUser) {
       throw new Error("User already exist using this same email.");
     }
+
+    let photoUrl = demoProfileUrl;
+
+    // Handle image upload if file is provided
+    if (file) {
+      const uploadedImage = await sendImageToCloudinary(
+        `user-${userData.email}-${Date.now()}`,
+        file.path
+      );
+      photoUrl = (uploadedImage as any).secure_url;
+    }
+
     if (userData.password) {
-      // if manual sign up there is password & hash it
       userData.password = await bcryptJs.hash(
         userData.password,
         Number(config.bcrypt_salt_rounds)
       );
     }
 
-    // if social sign up - create user without password
-
     const DBcreatedUser = await UserModel.create(
       [
         {
           ...userData,
-          photo: userData.photo || demoProfileUrl
+          photo: photoUrl,
         },
       ],
       { session }

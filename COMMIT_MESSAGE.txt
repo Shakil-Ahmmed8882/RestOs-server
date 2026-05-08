@@ -1,0 +1,23 @@
+feat(auth): implement image upload to cloudinary and fix password reset apis
+
+- Add Cloudinary image upload integration to registration endpoint
+- Images are uploaded to cloud and stored as secure URL in database
+- Support manual signup with password and OAuth signup without password
+- Make password field optional in user model for OAuth compatibility
+- Fix forget-password endpoint by adding auth() middleware
+- Extract userId from authenticated token instead of requiring it in body
+- Simplify forget-password API - no need to manually pass userId
+- Update auth.route.ts with multer and auth middlewares
+- Update auth.validation.ts to remove photo validation (handled via multer)
+- Update auth.controller.ts to pass file to registerUser service
+- Update auth.service.ts to handle Cloudinary upload before DB insert
+- Add comprehensive API documentation:
+  * docs/REGISTER.md - Registration with 3 scenarios (manual with/without image, OAuth)
+  * docs/FORGET_PASSWORD.md - Password reset request and email flow
+  * docs/RESET_PASSWORD.md - Password reset with token validation
+  * docs/README.md - Documentation index and complete workflow guide
+  * docs/IMPLEMENTATION_SUMMARY.md - Implementation details and migration guide
+- Improve error messages for clarity (e.g., "Reset token is required!")
+- Automatic file cleanup after Cloudinary upload
+- User auto-logged in immediately after registration
+- Tokens set in httpOnly cookies for security

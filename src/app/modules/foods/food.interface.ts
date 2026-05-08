@@ -4,8 +4,9 @@ export interface TReview {
     comment: string;
     date: string;
   }
-  
+
   export interface TFoodData {
+    _id?: string;
     foodName: string;
     status?: string;
     foodImage: string;
@@ -18,9 +19,15 @@ export interface TReview {
     food_origin: string;
     description: string;
     isVeg?: boolean;
+    isSpicy?: boolean;
+    isGlutenFree?: boolean;
     tags?: string[];
     preparationTime?: number;
     reviews: TReview[];
+    averageRating?: number;
+    cuisine?: string;
+    popularity?: number;
+    bestseller?: boolean;
   }
-  
+
   

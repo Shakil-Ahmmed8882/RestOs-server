@@ -85,11 +85,26 @@ const handleDeleteFood = catchAsync(async (req, res) => {
   });
 });
 
+const handleAddReview = catchAsync(async (req, res) => {
+  const { foodId } = req.params;
+  const reviewData = req.body;
+
+  const result = await foodServices.addReview(foodId, reviewData);
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Review added successfully",
+    data: result,
+  });
+});
+
 export const foodControllers = {
   handleCreateFood,
   handleGetSingleFood,
   handleGetAllFoods,
   handleGetTopFoods,
   handleUpdateFood,
-  handleDeleteFood
+  handleDeleteFood,
+  handleAddReview,
 };

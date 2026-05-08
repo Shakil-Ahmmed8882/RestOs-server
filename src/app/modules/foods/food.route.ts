@@ -34,6 +34,12 @@ router.delete(
   foodControllers.handleDeleteFood
 );
 
+router.post(
+  "/:foodId/review",
+  validateRequest(foodValidations.addReviewValidationSchema),
+  foodControllers.handleAddReview
+);
+
 export const foodRoutes = router;
 
 
