@@ -6,8 +6,8 @@ import catchAsync from '../utils/catchAsync';
 
 const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization;
-    
+    const token = req.headers.authorization?.split(' ')[1];
+
     const { decoded } = await validateTokenAndFetchUser(token!);
     const decodedRole = await decoded.role
     
