@@ -1,7 +1,7 @@
 # Forget Password API Documentation
 
 ## Overview
-The `/forget-password` endpoint is used when a logged-in user wants to reset their password. It generates a reset token with a 10-minute expiration and sends a reset link via email.
+The `/forget-password` endpoint allows users to request a password reset. It sends a reset link to the user's email containing a token. The user can then use this token to set a new password.
 
 ---
 
@@ -9,17 +9,12 @@ The `/forget-password` endpoint is used when a logged-in user wants to reset the
 
 ### Route
 ```
-POST /api/auth/forget-password
+POST /api/v1/auths/forget-password
 ```
 
 ### Authentication
 ```
-Required - User must be logged in
-```
-
-### Headers Required
-```
-Authorization: Bearer {accessToken}
+Not required - Public endpoint
 ```
 
 ### Content-Type
@@ -29,26 +24,24 @@ application/json
 
 ---
 
-## Request Body
+## Request
 
-The request body should be **empty** (just an empty JSON object or no body at all):
-
-```json
-{}
+### Headers
+```
+Content-Type: application/json
 ```
 
----
+### Body
 
-## How It Works
+```json
+{
+  "email": "user@example.com"
+}
+```
 
-1. **User is authenticated** - The `auth()` middleware validates the access token
-2. **User ID extracted** - From the authenticated request (decoded from token)
-3. **User verified** - Checks if user exists in database
-4. **Status checked** - Ensures user is not blocked
-5. **Reset token generated** - JWT token valid for 10 minutes
-6. **Reset link created** - Contains user ID and reset token
-7. **Email sent** - Reset link emailed to user's registered email
-8. **Response returned** - Confirmation to frontend
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | String | Yes | User's email address |
 
 ---
 
@@ -58,8 +51,134 @@ The request body should be **empty** (just an empty JSON object or no body at al
 {
   "statusCode": 200,
   "success": true,
-  "message": "Reset link is generated successfully!",
+  "message": "Reset link is generated succesfully!",
   "data": null
+}
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `statusCode` | Number | HTTP status code (200) |
+| `success` | Boolean | Operation status (true) |
+| `message` | String | Success message |
+| `data` | null | No data returned (check email) |
+
+---
+
+## What Happens After Request
+
+### Email Received
+User receives an email with:
+- Professional HTML formatted message
+- Reset password button
+- Backup reset link (copy-paste option)
+- Security warning about token expiration
+- Information about the 10-minute window
+
+### Email Link Format
+```
+https://your-reset-password-url.com?id={userId}&token={resetToken}
+```
+
+### Reset Token Details
+- **Valid for:** 10 minutes
+- **Format:** JWT token
+- **Contains:** userId, user info, expiration time
+- **Can be used:** Once to reset password
+
+---
+
+## Error Responses
+
+### 404 Not Found - User Doesn't Exist
+```json
+{
+  "statusCode": 404,
+  "success": false,
+  "message": "This user is not found !",
+  "errorSources": [
+    {
+      "path": "",
+      "message": "This user is not found !"
+    }
+  ],
+  "err": {
+    "statusCode": 404
+  }
+}
+```
+
+### 403 Forbidden - User Blocked
+```json
+{
+  "statusCode": 403,
+  "success": false,
+  "message": "This user is blocked ! !",
+  "errorSources": [
+    {
+      "path": "",
+      "message": "This user is blocked ! !"
+    }
+  ],
+  "err": {
+    "statusCode": 403
+  }
+}
+```
+
+### 400 Bad Request - Missing Email
+```json
+{
+  "statusCode": 400,
+  "success": false,
+  "message": "Validation failed",
+  "errorSources": [
+    {
+      "path": "email",
+      "message": "Email is required!"
+    }
+  ],
+  "err": {
+    "statusCode": 400
+  }
+}
+```
+
+### 400 Bad Request - Invalid Email
+```json
+{
+  "statusCode": 400,
+  "success": false,
+  "message": "Validation failed",
+  "errorSources": [
+    {
+      "path": "email",
+      "message": "Invalid email address!"
+    }
+  ],
+  "err": {
+    "statusCode": 400
+  }
+}
+```
+
+### 500 Server Error - Email Service Issue
+```json
+{
+  "statusCode": 500,
+  "success": false,
+  "message": "Failed to send reset email",
+  "errorSources": [
+    {
+      "path": "email",
+      "message": "Failed to send reset email. Please try again."
+    }
+  ],
+  "err": {
+    "statusCode": 500
+  }
 }
 ```
 
@@ -67,259 +186,326 @@ The request body should be **empty** (just an empty JSON object or no body at al
 
 ## Testing in Postman
 
-### Step 1: Login First
-1. Create a `POST` request to `/api/auth/login`
-2. Provide email and password:
-```json
-{
-  "email": "user@example.com",
-  "password": "YourPassword123"
-}
-```
-3. Copy the `accessToken` from response
-
-### Step 2: Call Forget Password
+### Step 1: Create Request
 1. Create a new `POST` request
-2. URL: `http://localhost:3000/api/auth/forget-password`
-3. Go to **Headers** tab
-4. Add header:
-   - Key: `Authorization`
-   - Value: `Bearer {accessToken}` (paste the token you copied)
+2. URL: `http://localhost:3000/api/v1/auths/forget-password`
+3. Body type: Select `raw` → `JSON`
 
-5. Go to **Body** tab
-6. Select **raw** → **JSON**
-7. Send empty JSON or no body:
-```json
-{}
-```
-
-### Step 3: Check Email
-- User receives reset link at their registered email
-- Link format: `{reset_ui_link}?id={userId}&token={resetToken}`
-- Reset token is valid for 10 minutes only
-
----
-
-## Error Scenarios
-
-### ❌ Missing Authorization Header
-**Status:** 401 Unauthorized
+### Step 2: Enter Body
 ```json
 {
-  "statusCode": 401,
-  "success": false,
-  "message": "You are not authorized!"
+  "email": "shakil88882@gmail.com"
 }
 ```
 
-**Solution:** 
-- Add `Authorization` header with valid access token
-- Token must be from a logged-in user
+### Step 3: Send Request
+Click **Send** button
+
+### Step 4: Check Email
+1. Open your email inbox
+2. Look for reset password email from system
+3. Email should arrive within 1-2 seconds
+4. Click the reset button in email or copy the link
+
+### Step 5: Extract Reset Token
+From email link: `https://yoursite.com/reset?id=USER_ID&token=RESET_TOKEN`
+
+The token is the `RESET_TOKEN` value
 
 ---
 
-### ❌ Invalid or Expired Token
-**Status:** 401 Unauthorized
-```json
-{
-  "statusCode": 401,
-  "success": false,
-  "message": "You are not authorized!"
-}
-```
+## cURL Example
 
-**Solution:**
-- Get a fresh access token by logging in again
-- Use the new token in the Authorization header
+```bash
+curl -X POST http://localhost:3000/api/v1/auths/forget-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com"
+  }'
+```
 
 ---
 
-### ❌ User Not Found
-**Status:** 404 Not Found
-```json
-{
-  "statusCode": 404,
-  "success": false,
-  "message": "This user is not found!"
-}
-```
+## JavaScript/Fetch Example
 
-**Solution:**
-- This should not happen if you're logged in
-- Indicates the user was deleted from database
-- Try logging in again
-
----
-
-### ❌ User is Blocked
-**Status:** 403 Forbidden
-```json
-{
-  "statusCode": 403,
-  "success": false,
-  "message": "This user is blocked!"
-}
-```
-
-**Solution:**
-- Contact administrator to unblock account
-- Cannot reset password while account is blocked
-
----
-
-### ❌ Email Service Failure
-**Status:** 500 Internal Server Error
-```json
-{
-  "statusCode": 500,
-  "success": false,
-  "message": "Failed to send reset email"
-}
-```
-
-**Solution:**
-- Check email service configuration
-- Verify SMTP credentials in `.env` file
-- Check network connectivity
-
----
-
-## Complete Postman Testing Flow
-
-### Collection Setup
-
-**Environment Variables:**
-```
-BASE_URL: http://localhost:3000/api
-EMAIL: test@example.com
-PASSWORD: TestPass123
-```
-
-### Request 1: Register User (if not already registered)
-```
-POST {{BASE_URL}}/auth/register
-Body (form-data):
-- name: Test User
-- email: {{EMAIL}}
-- password: {{PASSWORD}}
-```
-
-Save the access token to variable: `accessToken`
-
-### Request 2: Login (if already registered)
-```
-POST {{BASE_URL}}/auth/login
-Body (raw JSON):
-{
-  "email": "{{EMAIL}}",
-  "password": "{{PASSWORD}}"
-}
-```
-
-In response, copy `accessToken` and set it as environment variable: `accessToken`
-
-### Request 3: Forget Password
-```
-POST {{BASE_URL}}/auth/forget-password
-Headers:
-  Authorization: Bearer {{accessToken}}
-Body: (empty or {})
-```
-
-### Expected Response:
-```
-Status: 200
-Message: "Reset link is generated successfully!"
-```
-
-### Next Steps:
-- Check email for reset link
-- Use the reset link to call `/reset-password` endpoint
-- Reset link contains: `id` (userId) and `token` (resetToken)
-
----
-
-## Email Link Format
-
-The user receives an email with a reset link:
-
-```
-https://yourfrontend.com/reset-password?id=USER_ID&token=RESET_TOKEN
-```
-
-Frontend should:
-1. Extract `id` and `token` from URL
-2. User enters new password
-3. Frontend calls `/reset-password` endpoint with:
-   - `userId`: from URL parameter
-   - `newPassword`: from form input
-   - Authorization header with reset `token`
-
----
-
-## Important Notes
-
-⚠️ **Token Expiration:**
-- Reset token expires in 10 minutes
-- User must use the reset link within 10 minutes
-- After expiration, must call forget-password again
-
-⚠️ **User Authentication:**
-- Only authenticated users can request password reset
-- User must have valid access token
-- Access token must not be expired
-
-⚠️ **Email Delivery:**
-- Email is sent asynchronously
-- Reset link is generated and logged on backend
-- If email service fails, user can request again
-
-⚠️ **Security:**
-- Reset token is JWT signed
-- Contains userId and other user info
-- Verified on `/reset-password` endpoint
-- Single-use recommendation (token should be invalidated after use)
-
----
-
-## API Integration Example
-
-### JavaScript/Fetch
 ```javascript
-// After login, you have accessToken
-const response = await fetch('http://localhost:3000/api/auth/forget-password', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({})
-});
+const requestPasswordReset = async (email) => {
+  try {
+    const response = await fetch('http://localhost:3000/api/v1/auths/forget-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+      }),
+    });
 
-const data = await response.json();
-if (data.success) {
-  console.log('Reset link sent to email');
-  // Redirect user to check email
-}
-```
+    const data = await response.json();
 
-### TypeScript/Axios
-```typescript
-const response = await axios.post(
-  'http://localhost:3000/api/auth/forget-password',
-  {},
-  {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`
+    if (data.success) {
+      console.log('✅ Reset link sent to your email');
+      console.log('Check your inbox for reset instructions');
+      
+      // Show message to user
+      alert('Password reset link has been sent to your email. Please check your inbox (and spam folder).');
+      
+      // Optionally redirect to a "check email" page
+      window.location.href = '/check-email';
+    } else {
+      console.error('❌ Failed:', data.message);
+      alert(`Error: ${data.message}`);
     }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('An error occurred. Please try again.');
   }
-);
+};
 
-if (response.data.success) {
-  // Show message: "Reset link sent to your email"
-  // Redirect to email verification page
+// Usage
+const userEmail = document.getElementById('emailInput').value;
+requestPasswordReset(userEmail);
+```
+
+---
+
+## Axios Example
+
+```javascript
+import axios from 'axios';
+
+const requestPasswordReset = async (email) => {
+  try {
+    const response = await axios.post('/api/v1/auths/forget-password', {
+      email,
+    });
+
+    if (response.data.success) {
+      console.log('✅ Reset email sent');
+      return response.data;
+    }
+  } catch (error) {
+    console.error('❌ Error:', error.response?.data?.message);
+    throw error;
+  }
+};
+
+// Usage
+try {
+  await requestPasswordReset('user@example.com');
+  console.log('Check your email for reset instructions');
+} catch (error) {
+  // Handle error
 }
 ```
+
+---
+
+## TypeScript Example
+
+```typescript
+interface ForgetPasswordRequest {
+  email: string;
+}
+
+interface ForgetPasswordResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: null;
+}
+
+const requestPasswordReset = async (
+  email: string
+): Promise<ForgetPasswordResponse> => {
+  const response = await fetch('/api/v1/auths/forget-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to request password reset');
+  }
+
+  return response.json();
+};
+
+// Usage
+try {
+  const result = await requestPasswordReset('user@example.com');
+  if (result.success) {
+    console.log('✅ Reset link sent');
+  }
+} catch (error) {
+  console.error('Error:', error);
+}
+```
+
+---
+
+## React Component Example
+
+```jsx
+import { useState } from 'react';
+
+export default function ForgotPasswordForm() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+    setError('');
+
+    try {
+      const response = await fetch('/api/v1/auths/forget-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage('✅ Reset link sent to your email! Check your inbox.');
+        setEmail('');
+      } else {
+        setError(`❌ ${data.message}`);
+      }
+    } catch (err) {
+      setError('Failed to send reset link. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2>Reset Password</h2>
+      <input
+        type="email"
+        placeholder="Enter your email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      {message && <p style={{ color: 'green' }}>{message}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <button type="submit" disabled={loading}>
+        {loading ? 'Sending...' : 'Send Reset Link'}
+      </button>
+    </form>
+  );
+}
+```
+
+---
+
+## Complete Flow Example
+
+```javascript
+async function completePasswordResetFlow(email) {
+  try {
+    // Step 1: Request password reset
+    console.log('📧 Requesting password reset...');
+    const response = await fetch('/api/v1/auths/forget-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message);
+    }
+
+    console.log('✅ Reset email sent!');
+
+    // Step 2: User should check email and get token
+    // (This would normally involve user interaction)
+    // const resetToken = await getUserResetTokenFromEmail();
+
+    // Step 3: User navigates to reset password page with token
+    // Step 4: User submits new password (see RESET_PASSWORD.md)
+
+    return {
+      success: true,
+      message: 'Reset email sent. Check your inbox.',
+    };
+
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    throw error;
+  }
+}
+```
+
+---
+
+## Email Content
+
+When user requests password reset, they receive an email with:
+
+```
+Subject: Reset your password within 10 minutes!
+
+---
+
+Hello John,
+
+You requested a password reset. Click the button below to reset your password. 
+This link will expire in 10 minutes.
+
+[Reset Password Button]
+
+Or copy and paste this link in your browser:
+https://your-site.com/reset-password?id=USER_ID&token=RESET_TOKEN
+
+If you didn't request this password reset, please ignore this email.
+For security, never share this link with anyone.
+
+© RestOS. All rights reserved.
+```
+
+---
+
+## Security Notes
+
+### Token Expiration
+- Reset tokens expire after 10 minutes
+- User must complete reset within 10 minutes
+- After expiration, must request new reset link
+- Expired tokens will be rejected with 401 error
+
+### User Verification
+- User must exist in database
+- User must not be blocked
+- Email must match database record
+
+### Email Delivery
+- Emails sent via Gmail SMTP
+- Uses secure HTTPS connections
+- May take 1-2 seconds to arrive
+- Check spam folder if not found
+
+### Token Security
+- Token is signed with JWT secret
+- Token contains user information
+- Token cannot be modified (signed)
+- Token is one-time use
 
 ---
 
@@ -327,9 +513,66 @@ if (response.data.success) {
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| 401 Unauthorized | No token or expired token | Login again to get fresh token |
-| 404 User not found | User deleted or token corrupted | Try logging in again |
-| 403 User blocked | Account is blocked by admin | Contact administrator |
-| Email not received | Email service down | Retry forget-password |
-| Reset link expires | Took too long to click link | Request password reset again |
+| "This user is not found !" | Email doesn't exist in database | Register account first |
+| "Email is required!" | Missing email field | Include email in request body |
+| "Invalid email address!" | Invalid email format | Check email format (user@domain.com) |
+| "This user is blocked !" | User account is blocked | Contact administrator |
+| Email not received | SMTP configuration issue | Check .env email credentials |
+| Email takes too long | Email service delay | Wait 1-2 minutes or check spam |
+| Reset link expired | More than 10 minutes passed | Request new reset link |
+| "Failed to send reset email" | Email service down | Try again in a few moments |
 
+---
+
+## Integration Checklist
+
+- [ ] Create forgot password form with email input
+- [ ] Handle form submission
+- [ ] Call /forget-password endpoint
+- [ ] Show success message to user
+- [ ] Redirect to "Check Email" page
+- [ ] User checks email for reset link
+- [ ] Extract token from email link
+- [ ] Call /reset-password endpoint (see RESET_PASSWORD.md)
+- [ ] Show password reset success
+- [ ] Redirect to login page
+
+---
+
+## Best Practices
+
+1. **User Experience**
+   - Show clear message after sending link
+   - Suggest checking spam folder
+   - Link to resend if needed
+   - Auto-fill email on return
+
+2. **Security**
+   - Use HTTPS only
+   - Validate email format
+   - Limit request frequency (optional)
+   - Log reset attempts
+
+3. **Email**
+   - Clear, professional format
+   - Direct call-to-action button
+   - Expiration time clearly stated
+   - Support contact info
+
+---
+
+## Status Codes
+
+| Code | Status | Meaning |
+|------|--------|---------|
+| 200 | OK | Reset link sent successfully |
+| 400 | Bad Request | Invalid email or missing fields |
+| 403 | Forbidden | User is blocked |
+| 404 | Not Found | User doesn't exist |
+| 500 | Server Error | Email service failure |
+
+---
+
+**Last Updated:** 2026-05-09
+**API Version:** 1.0
+**Status:** ✅ Production Ready
