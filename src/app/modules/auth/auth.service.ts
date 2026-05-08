@@ -302,45 +302,50 @@ const forgetPassword = async (email: string) => {
   }
 };
 
-const resetPassword = async (
-  payload: { userId: string; newPassword: string },
-  token: string
-) => {
-  // checking if the user is exist
-  const user = await UserModel?.findById(payload?.userId);
+const resetPassword = async (token: string, newPassword: string) => {
+  // Verify and decode the token
+  let decoded: any;
+  try {
+    decoded = jwt.verify(
+      token,
+      config.jwt_access_secret as string
+    ) as JwtPayload;
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        'Reset token has expired! Please request a new one.'
+      );
+    }
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      'Invalid reset token!'
+    );
+  }
+
+  const userId = decoded.userId;
+
+  // Check if user exists
+  const user = await UserModel.findById(userId);
 
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
-  }
-  // checking if the user is already deleted
-
-  // checking if the user is blocked
-  const userStatus = user?.status;
-
-  if (userStatus === "BLOCKED") {
-    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked ! !");
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
   }
 
-  const decoded = jwt.verify(
-    token,
-    config.jwt_access_secret as string
-  ) as JwtPayload;
-
-  if (payload.userId !== decoded.userId) {
-    throw new AppError(httpStatus.FORBIDDEN, "You are forbidden!");
+  // Check if user is blocked
+  if (user.status === 'BLOCKED') {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
   }
 
-  //hash new password
+  // Hash the new password
   const newHashedPassword = await bcryptJs.hash(
-    payload.newPassword,
+    newPassword,
     Number(config.bcrypt_salt_rounds)
   );
 
-  await UserModel.findOneAndUpdate(
-    {
-      _id: decoded.userId,
-      role: decoded.role,
-    },
+  // Update password
+  await UserModel.findByIdAndUpdate(
+    userId,
     {
       password: newHashedPassword,
       passwordChangedAt: new Date(),
