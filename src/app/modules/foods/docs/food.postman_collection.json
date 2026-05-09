@@ -68,7 +68,7 @@
           "host": ["{{baseUrl}}"],
           "path": ["foods", "{{foodId}}"]
         },
-        "description": "Retrieve detailed information about a specific food item including reviews (public)"
+        "description": "Retrieve detailed information about a specific food item including reviews and related foods (public)\n\nResponse includes:\n- food: Main food item details\n- relatedFoods: Up to 6 related foods based on matching criteria\n- message: 'All related foods' or 'Top selling foods' (if no matches found)\n\nMatching criteria (in priority order):\n1. Same category with similar price (±20%)\n2. Same category\n3. Matching tags\n4. Same cuisine\n5. Similar dietary preferences (veg/non-veg)\n6. Fallback: Top-selling foods"
       },
       "response": []
     },

@@ -138,7 +138,7 @@ sort=-createdAt
 
 **Authentication**: None (Public)
 
-**Description**: Retrieve detailed information about a specific food item including reviews
+**Description**: Retrieve detailed information about a specific food item including reviews and related foods
 
 **Path Parameters**:
 ```
@@ -151,28 +151,67 @@ foodId: 507f1f77bcf86cd799439011
   "success": true,
   "message": "Food is retrieved successfully",
   "data": {
-    "_id": "507f1f77bcf86cd799439011",
-    "name": "Margherita Pizza",
-    "description": "Classic pizza with tomato, mozzarella, basil",
-    "price": 12.99,
-    "image": "https://cloudinary.url/image.jpg",
-    "category": "Pizzas",
-    "isAvailable": true,
-    "rating": 4.5,
-    "reviewCount": 12,
-    "reviews": [
+    "food": {
+      "_id": "507f1f77bcf86cd799439011",
+      "foodName": "Margherita Pizza",
+      "description": "Classic pizza with tomato, mozzarella, basil",
+      "price": 12.99,
+      "foodImage": "https://cloudinary.url/image.jpg",
+      "foodCategory": "Pizzas",
+      "status": "available",
+      "averageRating": 4.5,
+      "orders": 156,
+      "reviews": [
+        {
+          "_id": "507f1f77bcf86cd799439012",
+          "customer_name": "John Doe",
+          "rating": 5,
+          "comment": "Delicious pizza!",
+          "date": "2026-05-08"
+        }
+      ],
+      "tags": ["italian", "vegetarian"],
+      "cuisine": "Italian",
+      "isVeg": true,
+      "isSpicy": false,
+      "preparationTime": 15
+    },
+    "relatedFoods": [
       {
-        "_id": "507f1f77bcf86cd799439012",
-        "userId": "507f1f77bcf86cd799439001",
-        "userName": "John Doe",
-        "rating": 5,
-        "comment": "Delicious pizza!",
-        "createdAt": "2026-05-08T15:30:00Z"
+        "_id": "507f1f77bcf86cd799439013",
+        "foodName": "Vegetarian Pizza",
+        "price": 11.99,
+        "foodImage": "https://cloudinary.url/image2.jpg",
+        "foodCategory": "Pizzas",
+        "averageRating": 4.3,
+        "orders": 89
+      },
+      {
+        "_id": "507f1f77bcf86cd799439014",
+        "foodName": "Quattro Formaggi",
+        "price": 13.99,
+        "foodImage": "https://cloudinary.url/image3.jpg",
+        "foodCategory": "Pizzas",
+        "averageRating": 4.6,
+        "orders": 124
       }
-    ]
+    ],
+    "message": "All related foods"
   }
 }
 ```
+
+**Related Foods Matching Criteria** (in order of priority):
+1. Same category with similar price (±20%)
+2. Same category
+3. Matching tags
+4. Same cuisine
+5. Similar dietary preferences (veg/non-veg)
+6. Fallback: Top-selling foods (if no matches found)
+
+**Message Field**:
+- `"All related foods"` - When related foods matched the current food
+- `"Top selling foods"` - When no related foods were found, showing top sellers instead
 
 **Error Cases**:
 - 404: Food item not found

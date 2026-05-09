@@ -37,8 +37,60 @@ const createFood = async (file: any, payload: TFoodData) => {
 };
 
 const getSingleFood = async (id: string) => {
-  const result = FoodModel.findById(id);
-  return result;
+  const food = await FoodModel.findById(id);
+
+  if (!food) {
+    return { food: null, relatedFoods: [], message: "" };
+  }
+
+  // Get related foods based on priority matching
+  let relatedFoods = await FoodModel.find({
+    _id: { $ne: id },
+    $or: [
+      // Same category with similar price (±20%)
+      {
+        foodCategory: food.foodCategory,
+        price: {
+          $gte: food.price * 0.8,
+          $lte: food.price * 1.2,
+        },
+      },
+      // Same category
+      {
+        foodCategory: food.foodCategory,
+      },
+      // Matching tags
+      ...(food.tags && food.tags.length > 0
+        ? [{ tags: { $in: food.tags } }]
+        : []),
+      // Same cuisine
+      ...(food.cuisine ? [{ cuisine: food.cuisine }] : []),
+      // Similar dietary preferences
+      {
+        isVeg: food.isVeg,
+      },
+    ],
+  })
+    .sort({ averageRating: -1, orders: -1 })
+    .limit(6)
+    .lean();
+
+  let message = "All related foods";
+
+  // If no related foods found, get top-selling foods
+  if (relatedFoods.length === 0) {
+    relatedFoods = await FoodModel.find({ _id: { $ne: id } })
+      .sort({ orders: -1, averageRating: -1 })
+      .limit(6)
+      .lean();
+    message = "Top selling foods";
+  }
+
+  return {
+    food,
+    relatedFoods,
+    message,
+  };
 };
 
 const getTopSellingFood = async (query: Record<string, unknown>) => {

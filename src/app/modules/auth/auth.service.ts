@@ -251,14 +251,14 @@ const forgetPassword = async (email: string) => {
           You requested a password reset. Click the button below to reset your password. This link will expire in <strong>10 minutes</strong>.
         </p>
         <div style="text-align: center; margin-bottom: 30px;">
-          <a href="${resetUILink}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+          <a href="${resetUILink}" style="display: inline-block; background-color: #ff428f; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
             Reset Password
           </a>
         </div>
         <p style="color: #666; font-size: 12px; margin-bottom: 15px;">
           Or copy and paste this link in your browser:
         </p>
-        <p style="color: #007bff; font-size: 12px; word-break: break-all; margin-bottom: 30px;">
+        <p style="color: #ff428f; font-size: 12px; word-break: break-all; margin-bottom: 30px;">
           ${resetUILink}
         </p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
