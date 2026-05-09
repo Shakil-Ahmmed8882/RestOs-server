@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import app from "../src/app";
 import config from "../src/app/config";
+import { Request, Response, NextFunction } from "express";
 
 let isConnected = false;
 
@@ -23,12 +24,22 @@ async function connectDB() {
     console.log("Database connected successfully");
   } catch (error) {
     console.error("Database connection error:", error);
-    // Don't throw - allow the app to serve even if DB is not connected
-    // This will help with debugging
   }
 }
 
+// Wrap the app with error handling
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+});
+
 // Initialize database connection
-connectDB();
+connectDB().catch((error) => {
+  console.error("Failed to initialize database:", error);
+});
 
 export default app;
