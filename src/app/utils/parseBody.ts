@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 
-const parseBody = (req: Request, res: Response, next: NextFunction) => {
+const parseBody = (req: Request, res: Response, next: NextFunction): void => {
   if (req.body.data) {
     try {
       req.body = JSON.parse(req.body.data);
     } catch (error) {
-      return res.status(400).send({ error: "Invalid JSON data...." });
+      res.status(400).send({ error: "Invalid JSON data...." });
+      return;
     }
   }
   next();
