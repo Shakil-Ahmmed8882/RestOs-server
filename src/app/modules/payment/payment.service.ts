@@ -1,8 +1,8 @@
 import axios from "axios";
+import { randomUUID } from "crypto";
 import PaymentModel from "./payment.model";
 import OrdersModel from "../order/order.model";
 import { TPayment, TSSLCommerzPayload } from "./payment.interface";
-import { v4 as uuidv4 } from "uuid";
 
 const SSLCOMMERZ_API = process.env.IS_LIVE === "true"
   ? "https://securepay.sslcommerz.com/gwprocess/v4/api.php"
@@ -23,7 +23,7 @@ export const paymentService = {
       }
 
       // Generate unique transaction ID
-      const transactionId = `TXN-${orderId}-${uuidv4()}`;
+      const transactionId = `TXN-${orderId}-${randomUUID()}`;
 
       // Create payment record
       const payment = new PaymentModel({
