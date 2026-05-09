@@ -7,16 +7,16 @@
   },
   "item": [
     {
-      "name": "1. Create User",
+      "name": "1. Admin - Create User",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "if (pm.response.code === 200) {",
+              "if (pm.response.code === 201 || pm.response.code === 200) {",
               "    var jsonData = pm.response.json();",
               "    pm.environment.set('userId', jsonData.data._id);",
-              "    pm.environment.set('accessToken', jsonData.data.token);",
+              "    console.log('✅ User ID saved: ' + jsonData.data._id);",
               "}"
             ]
           }
@@ -26,13 +26,26 @@
         "method": "POST",
         "header": [
           {
-            "key": "Content-Type",
-            "value": "application/json"
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
           }
         ],
         "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"securePassword123\",\n  \"photo\": \"https://example.com/photo.jpg\",\n  \"bio\": \"Food enthusiast\",\n  \"location\": \"New York\",\n  \"contactNumber\": \"555-1234\",\n  \"cuisinePreferences\": [\"Italian\", \"Asian\"],\n  \"favoriteRestaurants\": [\"Restaurant A\", \"Restaurant B\"],\n  \"dietaryRestrictions\": [\"Vegetarian\"],\n  \"socialMedia\": {\n    \"instagram\": \"johndoe\",\n    \"facebook\": \"john.doe\",\n    \"twitter\": \"johndoe\"\n  },\n  \"diningFrequency\": \"Frequently\",\n  \"preferredMealTimes\": [\"Lunch\", \"Dinner\"],\n  \"paymentMethods\": [\"Credit Card\", \"Digital Wallet\"]\n}"
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "data",
+              "value": "{\"name\": \"John Doe\", \"email\": \"john@example.com\", \"password\": \"securePassword123\"}",
+              "type": "text"
+            },
+            {
+              "key": "photo",
+              "type": "file",
+              "src": [],
+              "disabled": true
+            }
+          ]
         },
         "url": {
           "raw": "{{baseUrl}}/users/create-user",
@@ -44,7 +57,7 @@
             "create-user"
           ]
         },
-        "description": "Creates a new user account. Public endpoint - no authentication required."
+        "description": "Creates a new user account with full details and optional photo upload (admin only)\n\nForm-data fields:\n- data: JSON string with name, email, password (required)\n- photo: Image file JPG/PNG/WebP (optional, max 5MB)\n\nRequired: Admin access token"
       },
       "response": []
     },

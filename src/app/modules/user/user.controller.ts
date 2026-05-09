@@ -5,13 +5,14 @@ import { userServices } from "./user.service";
 import AppError from "../../errors/AppError";
 
 const handleCreateUser = catchAsync(async (req, res) => {
-  const user = req.body;
-  const result = await userServices.createUser(user);
+  const userData = req.body;
+  const file = req.file;
+  const result = await userServices.createUser(userData, file);
 
   sendResponse(res, {
-    statusCode: httpStatus.OK,
+    statusCode: httpStatus.CREATED,
     success: true,
-    message: "User is created successfully",
+    message: "User created successfully",
     data: result,
   });
 });

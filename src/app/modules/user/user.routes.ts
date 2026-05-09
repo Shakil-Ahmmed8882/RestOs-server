@@ -5,11 +5,15 @@ import { userControllers } from "./user.controller";
 import auth from "../../middlewares/auth";
 import { USER_ROLE } from "../../constants";
 import { upload } from "../../utils/sendImageToCloudinary";
+import parseBody from "../../utils/parseBody";
 
 const router = Router();
 
 router.post(
   "/create-user",
+  auth(USER_ROLE.ADMIN),
+  upload.single("photo"),
+  parseBody,
   validateRequest(userValidations.createUserValidationSchema),
   userControllers.handleCreateUser
 );

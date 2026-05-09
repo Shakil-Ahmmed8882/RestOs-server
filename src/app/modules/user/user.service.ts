@@ -11,12 +11,31 @@ import {
 import validateUserAndStatus from "../../helper/validateUserStatus";
 import { sendImageToCloudinary, deleteImageFromCloudinary } from "../../utils/sendImageToCloudinary";
 
-const createUser = async (payload: TUser) => {
-  const user = await UserModel.findOne({ email: payload.email });
+const createUser = async (payload: TUser, file?: Express.Multer.File) => {
+  const existingUser = await UserModel.findOne({ email: payload.email });
+  if (existingUser) throw new AppError(httpStatus.CONFLICT, "User already exists with this email");
 
-  if (user) throw new AppError(httpStatus.CONFLICT, "User Already Exist");
+  const userData = { ...payload };
 
-  const result = await UserModel.create(payload);
+  // Handle photo upload if file is provided
+  if (file) {
+    const uploadedImage = await sendImageToCloudinary(
+      `user-${payload.email}-${Date.now()}`,
+      file.path
+    );
+    userData.photo = (uploadedImage as any).secure_url;
+    userData.photoPublicId = (uploadedImage as any).public_id;
+  }
+
+  // Hash password using bcryptjs
+  const bcryptJs = require("bcryptjs");
+  const hashedPassword = await bcryptJs.hash(
+    payload.password,
+    Number(process.env.BCRYPT_SALT_ROUNDS || 10)
+  );
+  userData.password = hashedPassword;
+
+  const result = await UserModel.create(userData);
   return result;
 };
 

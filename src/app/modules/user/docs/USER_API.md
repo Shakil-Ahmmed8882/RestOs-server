@@ -7,41 +7,40 @@ The User API provides endpoints for managing user profiles, including retrieving
 
 ## Endpoints
 
-### 1. Create User
-Creates a new user account. This endpoint is public and does not require authentication.
+### 1. Create User (Admin Only)
+Creates a new user account with full details including profile photo. **Admin only** - requires authentication.
 
-**Endpoint:** `POST /api/users/create-user`
+**Endpoint:** `POST /api/v1/users/create-user`
 
-**Request Body:**
-```json
-{
+**Authentication:** Admin only (Bearer token required)
+
+**Request Headers:**
+```
+Authorization: Bearer {{accessToken}}
+```
+
+**Request Body** (form-data):
+```
+data: {
   "name": "John Doe",
   "email": "john@example.com",
-  "password": "securePassword123",
-  "photo": "https://example.com/photo.jpg",
-  "bio": "Food enthusiast",
-  "location": "New York",
-  "contactNumber": "555-1234",
-  "cuisinePreferences": ["Italian", "Asian"],
-  "favoriteRestaurants": ["Restaurant A", "Restaurant B"],
-  "dietaryRestrictions": ["Vegetarian"],
-  "socialMedia": {
-    "instagram": "johndoe",
-    "facebook": "john.doe",
-    "twitter": "johndoe"
-  },
-  "diningFrequency": "Frequently",
-  "preferredMealTimes": ["Lunch", "Dinner"],
-  "paymentMethods": ["Credit Card", "Digital Wallet"]
+  "password": "securePassword123"
 }
+photo: (optional image file - JPG, PNG, WebP)
 ```
+
+**Field Constraints:**
+- `name`: Required, string
+- `email`: Required, valid email format
+- `password`: Required, minimum 6 characters
+- `photo`: Optional, image file (max 5MB)
 
 **Response (201 Created):**
 ```json
 {
   "statusCode": 201,
   "success": true,
-  "message": "User is created successfully",
+  "message": "User created successfully",
   "data": {
     "_id": "64d5f3a8b2c1d4e5f6g7h8i9",
     "name": "John Doe",
@@ -50,10 +49,17 @@ Creates a new user account. This endpoint is public and does not require authent
     "photoPublicId": "user-photo-id",
     "role": "user",
     "status": "active",
-    "isDeleted": false
+    "isDeleted": false,
+    "createdAt": "2026-05-10T10:00:00Z"
   }
 }
 ```
+
+**Error Cases:**
+- 400: Missing required fields (name, email, password)
+- 401: Unauthorized (not admin)
+- 409: User already exists with this email
+- 413: File too large
 
 ---
 
