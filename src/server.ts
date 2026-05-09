@@ -4,10 +4,13 @@ import mongoose from "mongoose";
 // Create a fallback app in case the main app fails to load
 const fallbackApp = express();
 
+let loadError: any = null;
+
 fallbackApp.all("*", (_req, res) => {
   res.status(200).json({
-    success: true,
-    message: "Server is running but full app not loaded yet",
+    success: false,
+    message: loadError ? `App loading failed: ${loadError.message}` : "Server is running but full app not loaded yet",
+    error: loadError?.message,
   });
 });
 
@@ -51,6 +54,7 @@ try {
     console.log("Running in Vercel serverless environment");
   }
 } catch (error: any) {
+  loadError = error;
   console.error("Error loading main app:", error?.message);
   console.error("Stack:", error?.stack);
   // Will use fallback app
