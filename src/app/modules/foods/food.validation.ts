@@ -12,9 +12,15 @@ const createFoodValidationSchema = z.object({
     foodName: z.string(),
     status: z.string().optional(),
     foodCategory: z.string(),
-    price: z.number().positive(),
-    discountPercent: z.number().min(0).max(100).optional(),
-    quantity: z.number().nonnegative(),
+    price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Price must be a positive number",
+    }),
+    discountPercent: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100, {
+      message: "Discount percent must be between 0 and 100",
+    }).optional(),
+    quantity: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Quantity must be a non-negative number",
+    }),
     made_by: z.string(),
     food_origin: z.string(),
     description: z.string(),
@@ -22,7 +28,9 @@ const createFoodValidationSchema = z.object({
     isSpicy: z.boolean().optional(),
     isGlutenFree: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
-    preparationTime: z.number().nonnegative().optional(),
+    preparationTime: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Preparation time must be a non-negative number",
+    }).optional(),
     cuisine: z.string().optional(),
     bestseller: z.boolean().optional(),
   }),
@@ -34,10 +42,18 @@ const foodUpdateValidationSchema = z.object({
     status: z.string().optional(),
     foodImage: z.string().url().optional(),
     foodCategory: z.string().optional(),
-    price: z.number().positive().optional(),
-    discountPercent: z.number().min(0).max(100).optional(),
-    orders: z.number().nonnegative().optional(),
-    quantity: z.number().nonnegative().optional(),
+    price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Price must be a positive number",
+    }).optional(),
+    discountPercent: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100, {
+      message: "Discount percent must be between 0 and 100",
+    }).optional(),
+    orders: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Orders must be a non-negative number",
+    }).optional(),
+    quantity: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Quantity must be a non-negative number",
+    }).optional(),
     made_by: z.string().optional(),
     food_origin: z.string().optional(),
     description: z.string().optional(),
@@ -45,7 +61,9 @@ const foodUpdateValidationSchema = z.object({
     isSpicy: z.boolean().optional(),
     isGlutenFree: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
-    preparationTime: z.number().nonnegative().optional(),
+    preparationTime: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Preparation time must be a non-negative number",
+    }).optional(),
     cuisine: z.string().optional(),
     bestseller: z.boolean().optional(),
     reviews: z.array(reviewSchema).optional(),

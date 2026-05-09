@@ -6,12 +6,17 @@ const OrderSchema: Schema<TOrder> = new Schema(
   {
     food: { type: Schema.Types.ObjectId, ref: "Food", required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    foodName:{type:String},
+    foodName: { type: String },
     status: {
-      type: String, 
-      enum: ["pending", "confirmed", "canceled"], 
-      default: "pending", 
-      required: true 
+      type: String,
+      enum: ["pending", "confirmed", "canceled"],
+      default: "pending",
+      required: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed", "cancelled"],
+      default: "pending",
     },
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },

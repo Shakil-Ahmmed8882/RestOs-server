@@ -98,6 +98,61 @@ RestOs is a restaurant operations management system with user authentication and
 
 ---
 
+# Order Management
+
+**Description**: Users can place orders for food items. Admins can view and manage all orders.
+
+**Who can use it**: Everyone (users place orders), Admin (view and manage all orders)
+
+**What can a User do:**
+- Create a new order for food items
+- View their own order details
+- View their order history
+- Cancel pending orders
+
+**What can an Admin do:**
+- View all orders in the system
+- View order details (customer info, items, status)
+- Update order status (pending, confirmed, canceled)
+- View order summary and analytics
+
+**Limitations / Rules**:
+- Users can only view and manage their own orders
+- Orders must reference existing food items
+- Order quantity must be greater than zero
+- Orders require valid user authentication
+
+---
+
+# Payment Processing
+
+**Description**: Users can process payments for orders through SSL Commerce secure gateway. Payment history and transaction details are available.
+
+**Who can use it**: Authenticated users (make payments), Admins (view payment analytics)
+
+**What can a User do:**
+- Initiate payment for a pending order
+- View their payment history with details
+- See payment status (pending, completed, failed, cancelled)
+- Access transaction IDs and payment receipts
+- Receive automatic order confirmation upon successful payment
+
+**What can an Admin do:**
+- View all payment transactions in the system
+- Track payment status across all orders
+- Monitor payment analytics and trends
+
+**Limitations / Rules**:
+- Only authenticated users can initiate payments
+- Payment must be for a valid existing order
+- Each order can have only one active payment
+- Failed or cancelled payments can be retried
+- Payment status automatically updates order status
+- SSL Commerce secure gateway used for all transactions
+- Payments are non-refundable (handled by payment gateway)
+
+---
+
 # (Future Features - To be documented as added)
 
 ---

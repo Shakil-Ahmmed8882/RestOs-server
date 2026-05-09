@@ -48,7 +48,7 @@ router.delete(
 // Authenticated users - Add review to food
 router.post(
   "/:foodId/review",
-  auth(USER_ROLE.USER),
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   validateRequest(foodValidations.addReviewValidationSchema),
   foodControllers.handleAddReview
 );

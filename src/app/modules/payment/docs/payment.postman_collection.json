@@ -1,0 +1,253 @@
+{
+  "info": {
+    "_postman_id": "payment-module-collection",
+    "name": "Payment Module API",
+    "description": "Complete API collection for Payment management with SSL Commerce integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User - Initiate Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": \"{{orderId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payments/initiate",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "initiate"]
+        },
+        "description": "Initiate payment for an order via SSL Commerce gateway (authenticated users)"
+      },
+      "response": []
+    },
+    {
+      "name": "Payment Success Callback (SSL Commerz)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/payments/success?tran_id={{transactionId}}&val_id=test-val-id&amount=1500&currency=BDT&status=VALID",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "success"],
+          "query": [
+            {
+              "key": "tran_id",
+              "value": "{{transactionId}}"
+            },
+            {
+              "key": "val_id",
+              "value": "test-val-id"
+            },
+            {
+              "key": "amount",
+              "value": "1500"
+            },
+            {
+              "key": "currency",
+              "value": "BDT"
+            },
+            {
+              "key": "status",
+              "value": "VALID"
+            }
+          ]
+        },
+        "description": "Payment success callback from SSL Commerz (redirects to client success page)"
+      },
+      "response": []
+    },
+    {
+      "name": "Payment Failure Callback (SSL Commerz)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/payments/fail?tran_id={{transactionId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "fail"],
+          "query": [
+            {
+              "key": "tran_id",
+              "value": "{{transactionId}}"
+            }
+          ]
+        },
+        "description": "Payment failure callback from SSL Commerz (redirects to client failure page)"
+      },
+      "response": []
+    },
+    {
+      "name": "Payment Cancellation Callback (SSL Commerz)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/payments/cancel?tran_id={{transactionId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "cancel"],
+          "query": [
+            {
+              "key": "tran_id",
+              "value": "{{transactionId}}"
+            }
+          ]
+        },
+        "description": "Payment cancellation callback from SSL Commerz (redirects to client cancellation page)"
+      },
+      "response": []
+    },
+    {
+      "name": "IPN Handler (SSL Commerz Webhook)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tran_id\": \"{{transactionId}}\",\n  \"val_id\": \"test-val-id\",\n  \"amount\": \"1500.00\",\n  \"currency\": \"BDT\",\n  \"status\": \"VALID\",\n  \"store_amount\": \"1485.00\",\n  \"card_type\": \"Visa\",\n  \"card_no\": \"****5891\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payments/ipn",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "ipn"]
+        },
+        "description": "Instant Payment Notification handler from SSL Commerz (server-to-server webhook)"
+      },
+      "response": []
+    },
+    {
+      "name": "User - Get Payment History",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/payments/history?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "history"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "description": "Retrieve paginated list of all payments made by the authenticated user"
+      },
+      "response": []
+    },
+    {
+      "name": "User - Get Payment Details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/payments/{{paymentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "{{paymentId}}"]
+        },
+        "description": "Retrieve detailed information about a specific payment"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token (set after login/signup)"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string",
+      "description": "Order ID (get from create order or get orders response)"
+    },
+    {
+      "key": "transactionId",
+      "value": "",
+      "type": "string",
+      "description": "Transaction ID (set from payment initiation response)"
+    },
+    {
+      "key": "paymentId",
+      "value": "",
+      "type": "string",
+      "description": "Payment ID (get from payment history response)"
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-extract transactionId from payment initiation response",
+          "if (pm.response.code === 200 && pm.request.url.path.includes('initiate')) {",
+          "  try {",
+          "    const responseData = pm.response.json();",
+          "    if (responseData.data && responseData.data.transactionId) {",
+          "      pm.environment.set('transactionId', responseData.data.transactionId);",
+          "      console.log('✅ Transaction ID saved: ' + responseData.data.transactionId);",
+          "    }",
+          "  } catch (error) {",
+          "    console.log('Could not extract transaction ID from response');",
+          "  }",
+          "}",
+          "",
+          "// Auto-extract paymentId from payment history response",
+          "if (pm.response.code === 200 && pm.request.url.path.includes('history')) {",
+          "  try {",
+          "    const responseData = pm.response.json();",
+          "    if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {",
+          "      pm.environment.set('paymentId', responseData.data[0]._id);",
+          "      console.log('✅ Payment ID saved from history: ' + responseData.data[0]._id);",
+          "    }",
+          "  } catch (error) {",
+          "    console.log('Could not extract payment ID from response');",
+          "  }",
+          "}"
+        ]
+      }
+    }
+  ]
+}
