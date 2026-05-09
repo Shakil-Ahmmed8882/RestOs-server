@@ -10,7 +10,7 @@ import mongoose from "mongoose";
 
 import { TLoginUser } from "./auth.interface";
 import UserModel from "../user/user.model";
-import { createToken, verifyToken } from "./auth.utils";
+import { createToken, verifyToken, JwtPayloadType } from "./auth.utils";
 import { demoProfileUrl } from "../../shared";
 import { USER_ROLE } from "../../constants";
 import { sendEmail } from "../../utils/sendEmail";
@@ -39,8 +39,8 @@ const loginUser = async (payload: TLoginUser) => {
     }
   }
 
-  const jwtPayload = {
-    userId: user._id,
+  const jwtPayload: JwtPayloadType = {
+    userId: user._id as unknown as mongoose.Types.ObjectId,
     name: user.name,
     email: user.email,
     role: user.role,
@@ -89,12 +89,12 @@ const refreshToken = async (token: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
   }
 
-  const jwtPayload = {
-    userId: user._id,
+  const jwtPayload: JwtPayloadType = {
+    userId: user._id as unknown as mongoose.Types.ObjectId,
     name: user.name,
     email: user.email,
     role: user.role,
-    photo: user.photo as string ,
+    photo: user.photo as string,
   };
 
   const accessToken = createToken(
@@ -149,8 +149,8 @@ const registerUser = async (userData: TLoginUser, file?: Express.Multer.File) =>
 
     const createdUser = DBcreatedUser[0];
     if (createdUser?._id) {
-      const jwtPayload = {
-        userId: createdUser._id,
+      const jwtPayload: JwtPayloadType = {
+        userId: createdUser._id as unknown as mongoose.Types.ObjectId,
         name: createdUser.name,
         email: createdUser.email,
         role: createdUser.role,
@@ -224,8 +224,8 @@ const forgetPassword = async (email: string) => {
     throw new AppError(httpStatus.FORBIDDEN, "This user is blocked ! !");
   }
 
-  const jwtPayload = {
-    userId: user._id,
+  const jwtPayload: JwtPayloadType = {
+    userId: user._id as unknown as mongoose.Types.ObjectId,
     name: user.name,
     email: user.email,
     role: user.role,
