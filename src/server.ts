@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 const fallbackApp = express();
 
 let loadError: any = null;
+let isConnected = false;
 
 fallbackApp.all("*", (_req, res) => {
   res.status(200).json({
@@ -30,6 +31,27 @@ try {
 
   const port = process.env.PORT || 5000;
   console.log("Server configured, port:", port);
+  console.log("DATABASE_URL available:", !!configModule.database_url);
+
+  // Add request timeout middleware for serverless
+  if (process.env.VERCEL) {
+    mainApp.use((req: any, res: any, next: any) => {
+      // Set a 25-second timeout for requests (Vercel's limit is 60 for Pro, 10 for free)
+      const timeout = setTimeout(() => {
+        if (!res.headersSent) {
+          res.status(504).json({
+            success: false,
+            message: "Request timeout - database or service is not responding",
+          });
+        }
+      }, 25000);
+
+      res.on("finish", () => clearTimeout(timeout));
+      res.on("close", () => clearTimeout(timeout));
+
+      next();
+    });
+  }
 
   // Only connect to MongoDB and listen if not in serverless environment
   if (!process.env.VERCEL) {
@@ -37,7 +59,10 @@ try {
       try {
         if (configModule.database_url) {
           console.log("Connecting to database...");
-          await mongoose.connect(configModule.database_url);
+          await mongoose.connect(configModule.database_url, {
+            socketTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 5000,
+          });
           console.log("Database connected");
         }
 
@@ -52,6 +77,21 @@ try {
     main();
   } else {
     console.log("Running in Vercel serverless environment");
+    // In serverless, connect lazily on first request
+    if (configModule.database_url) {
+      mongoose
+        .connect(configModule.database_url, {
+          socketTimeoutMS: 5000,
+          serverSelectionTimeoutMS: 5000,
+        })
+        .then(() => {
+          console.log("Database connected in serverless");
+          isConnected = true;
+        })
+        .catch((err) => {
+          console.error("Failed to connect to database:", err?.message);
+        });
+    }
   }
 } catch (error: any) {
   loadError = error;
