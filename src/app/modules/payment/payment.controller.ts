@@ -125,7 +125,6 @@ export const paymentControllers = {
       const result = await paymentService.getPaymentHistory(userId, page, limit);
 
       res.status(200).json({
-        success: true,
         message: "Payment history retrieved successfully",
         ...result,
       });
@@ -145,7 +144,6 @@ export const paymentControllers = {
       const result = await paymentService.getPaymentDetails(paymentId);
 
       res.status(200).json({
-        success: true,
         message: "Payment details retrieved successfully",
         ...result,
       });
