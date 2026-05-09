@@ -1,0 +1,246 @@
+{
+  "info": {
+    "_postman_id": "food-module-collection",
+    "name": "Food Module API",
+    "description": "Complete API collection for Food management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Public - Get All Foods",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/foods?page=1&limit=10&search=&category=&sort=-createdAt",
+          "host": ["{{baseUrl}}"],
+          "path": ["foods"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            },
+            {
+              "key": "search",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "category",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "sort",
+              "value": "-createdAt"
+            }
+          ]
+        },
+        "description": "Retrieve paginated list of all available foods (public)"
+      },
+      "response": []
+    },
+    {
+      "name": "Public - Get Top Selling Foods",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/foods/top-selling-food",
+          "host": ["{{baseUrl}}"],
+          "path": ["foods", "top-selling-food"]
+        },
+        "description": "Retrieve list of top-selling foods sorted by order count (public)"
+      },
+      "response": []
+    },
+    {
+      "name": "Public - Get Single Food Details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/foods/{{foodId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["foods", "{{foodId}}"]
+        },
+        "description": "Retrieve detailed information about a specific food item including reviews (public)"
+      },
+      "response": []
+    },
+    {
+      "name": "Admin - Create Food",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "data",
+              "value": "{\"name\": \"Margherita Pizza\", \"description\": \"Classic pizza with tomato, mozzarella, basil\", \"price\": 12.99, \"category\": \"Pizzas\", \"isAvailable\": true}",
+              "type": "text"
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "src": [],
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/foods/create-food",
+          "host": ["{{baseUrl}}"],
+          "path": ["foods", "create-food"]
+        },
+        "description": "Create a new food item with optional image upload to Cloudinary (admin only)\n\nForm-data fields:\n- data: JSON string with food details (required)\n- file: Image file JPG/PNG/WebP (optional, max 5MB)\n\nRequired token: Admin access token"
+      },
+      "response": []
+    },
+    {
+      "name": "Admin - Update Food",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "data",
+              "value": "{\"name\": \"Margherita Pizza Updated\", \"price\": 13.99, \"isAvailable\": true}",
+              "type": "text"
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "src": [],
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/foods/{{foodId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["foods", "{{foodId}}"]
+        },
+        "description": "Update food details and optionally update image (admin only)\n\nForm-data fields:\n- data: JSON string with fields to update (optional)\n- file: New image file (optional)\n\nRequired token: Admin access token"
+      },
+      "response": []
+    },
+    {
+      "name": "Admin - Delete Food",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/foods/{{foodId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["foods", "{{foodId}}"]
+        },
+        "description": "Delete a food item permanently (admin only)\n\nRequired token: Admin access token"
+      },
+      "response": []
+    },
+    {
+      "name": "User - Add Review to Food",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Amazing food, highly recommend!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/foods/{{foodId}}/review",
+          "host": ["{{baseUrl}}"],
+          "path": ["foods", "{{foodId}}", "review"]
+        },
+        "description": "Add a rating and review to a food item (authenticated users)\n\nRequest body:\n- rating: Number 1-5 (required)\n- comment: String max 500 chars (optional)\n\nRequired token: User access token"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token (set after login/signup)"
+    },
+    {
+      "key": "foodId",
+      "value": "",
+      "type": "string",
+      "description": "Food item ID (auto-populated from list or create response)"
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-extract foodId from GET all foods or create food response",
+          "if (pm.response.code === 200 || pm.response.code === 201) {",
+          "  try {",
+          "    const responseData = pm.response.json();",
+          "    if (responseData.data && responseData.data._id) {",
+          "      pm.environment.set('foodId', responseData.data._id);",
+          "      console.log('✅ Food ID saved: ' + responseData.data._id);",
+          "    } else if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {",
+          "      pm.environment.set('foodId', responseData.data[0]._id);",
+          "      console.log('✅ Food ID saved from list: ' + responseData.data[0]._id);",
+          "    }",
+          "  } catch (error) {",
+          "    console.log('Could not extract food ID from response');",
+          "  }",
+          "}",
+          "",
+          "// Save access token from response if available",
+          "if (pm.response.code === 200 && pm.response.json().data.accessToken) {",
+          "  pm.environment.set('accessToken', pm.response.json().data.accessToken);",
+          "  console.log('✅ Access Token saved');",
+          "}"
+        ]
+      }
+    }
+  ]
+}
