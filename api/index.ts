@@ -24,8 +24,9 @@ async function connectDB() {
   }
 }
 
-// Start database connection in background
-connectDB();
+// Initialize database connection
+connectDB().catch((error) => {
+  console.error("Failed to initialize database:", error);
+});
 
-// Export the app
 export default app;
