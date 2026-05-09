@@ -13,9 +13,9 @@ const router = Router();
 // Route to create a category (Admin only)
 router.post(
   "/create-category",
+  auth(USER_ROLE.ADMIN),
   upload.single("file"),
   parseBody,
-  auth(USER_ROLE.ADMIN),
   validateRequest(foodCategoryValidations.createFoodCategoryValidationSchema),
   foodCategoryControllers.handleCreateCategory
 );
@@ -29,9 +29,9 @@ router.get("/:categoryId", foodCategoryControllers.handleGetSingleCategory);
 // Route to update a category (Admin only)
 router.patch(
   "/:categoryId",
+  auth(USER_ROLE.ADMIN),
   upload.single("file"),
   parseBody,
-  auth(USER_ROLE.ADMIN),
   validateRequest(foodCategoryValidations.updateFoodCategoryValidationSchema),
   foodCategoryControllers.handleUpdateCategory
 );

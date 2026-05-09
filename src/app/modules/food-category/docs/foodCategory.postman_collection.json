@@ -1,0 +1,245 @@
+{
+  "info": {
+    "_postman_id": "food-category-api-collection",
+    "name": "Food Category API",
+    "description": "Food Category Management API - Create, Read, Update, Delete food categories with image upload support",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Get All Categories",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const response = pm.response.json();",
+              "",
+              "if (response?.data?.result?.length > 0) {",
+              "    const firstCategoryId = response.data.result[0]._id;",
+              "    pm.environment.set('categoryId', firstCategoryId);",
+              "    console.log('categoryId saved:', firstCategoryId);",
+              "} else {",
+              "    console.log('No categories found');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/food-categories?search=&limit=10&page=1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "food-categories"
+          ],
+          "query": [
+            {
+              "key": "search",
+              "value": "",
+              "description": "Search by category name"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Results per page"
+            },
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number"
+            },
+            {
+              "key": "sort",
+              "value": "-createdAt",
+              "description": "Sort field with order e.g. -createdAt (optional)",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Retrieves a paginated list of all food categories. Public endpoint - no authentication required."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Get Single Category",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/food-categories/{{categoryId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "food-categories",
+            "{{categoryId}}"
+          ]
+        },
+        "description": "Retrieves a specific food category by ID. Public endpoint - no authentication required."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Create Category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const response = pm.response.json();",
+              "",
+              "if (response?.data?.createdCategory?.[0]?._id) {",
+              "    const categoryId = response.data.createdCategory[0]._id;",
+              "    pm.environment.set('categoryId', categoryId);",
+              "    console.log('categoryId saved:', categoryId);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "name",
+              "value": "Italian",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "description",
+              "value": "Italian cuisine dishes",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "disabled": true,
+              "description": "Optional - Upload category image (Max 10MB)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/food-categories/create-category",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "food-categories",
+            "create-category"
+          ]
+        },
+        "description": "Creates a new food category. Admin only endpoint - requires authentication."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Update Category",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "name",
+              "value": "Italian Cuisine",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "description",
+              "value": "Updated Italian cuisine dishes",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "disabled": true,
+              "description": "Optional - Upload new category image (Max 10MB)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/food-categories/{{categoryId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "food-categories",
+            "{{categoryId}}"
+          ]
+        },
+        "description": "Updates an existing food category. File upload is optional. Admin only endpoint - requires authentication."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Delete Category",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/food-categories/{{categoryId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "food-categories",
+            "{{categoryId}}"
+          ]
+        },
+        "description": "Permanently deletes a food category. Admin only endpoint - requires authentication."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string",
+      "description": "Base URL for API - Change to your server URL"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT authentication token - Set after login (Admin token required)"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string",
+      "description": "Category ID - Auto-populated from list or create response"
+    }
+  ]
+}
