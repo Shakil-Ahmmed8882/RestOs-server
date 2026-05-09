@@ -1,6 +1,10 @@
 import { config } from "dotenv";
 
-config();
+try {
+  config();
+} catch (error) {
+  console.log("Could not load .env file:", error);
+}
 export default {
   NODE_ENV: process.env.NODE_ENV,
   port: process.env.PORT,
