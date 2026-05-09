@@ -1,0 +1,245 @@
+{
+  "info": {
+    "_postman_id": "user-api-collection",
+    "name": "User API",
+    "description": "User Management API - Create, Read, Update, Delete user accounts with photo upload support",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.environment.set('userId', jsonData.data._id);",
+              "    pm.environment.set('accessToken', jsonData.data.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"securePassword123\",\n  \"photo\": \"https://example.com/photo.jpg\",\n  \"bio\": \"Food enthusiast\",\n  \"location\": \"New York\",\n  \"contactNumber\": \"555-1234\",\n  \"cuisinePreferences\": [\"Italian\", \"Asian\"],\n  \"favoriteRestaurants\": [\"Restaurant A\", \"Restaurant B\"],\n  \"dietaryRestrictions\": [\"Vegetarian\"],\n  \"socialMedia\": {\n    \"instagram\": \"johndoe\",\n    \"facebook\": \"john.doe\",\n    \"twitter\": \"johndoe\"\n  },\n  \"diningFrequency\": \"Frequently\",\n  \"preferredMealTimes\": [\"Lunch\", \"Dinner\"],\n  \"paymentMethods\": [\"Credit Card\", \"Digital Wallet\"]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/create-user",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "create-user"
+          ]
+        },
+        "description": "Creates a new user account. Public endpoint - no authentication required."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Get All Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users?search=&limit=10&page=1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users"
+          ],
+          "query": [
+            {
+              "key": "search",
+              "value": "",
+              "description": "Search by name, email, or contact number"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Results per page"
+            },
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number"
+            },
+            {
+              "key": "fields",
+              "value": "",
+              "description": "Comma-separated fields to include (optional)"
+            },
+            {
+              "key": "sort",
+              "value": "",
+              "description": "Sort field with order e.g. -createdAt (optional)"
+            }
+          ]
+        },
+        "description": "Retrieves a paginated list of all users. Requires authentication (USER or ADMIN role)."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Single User",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "{{userId}}"
+          ]
+        },
+        "description": "Retrieves a specific user's profile by ID. Requires authentication (USER or ADMIN role)."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Update User Profile",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "name",
+              "value": "John Updated",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "bio",
+              "value": "Updated bio",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "location",
+              "value": "Los Angeles",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "contactNumber",
+              "value": "555-5678",
+              "type": "text",
+              "disabled": false
+            },
+            {
+              "key": "photo",
+              "type": "file",
+              "disabled": true,
+              "description": "Optional - Upload new profile photo (Max 10MB)"
+            },
+            {
+              "key": "diningFrequency",
+              "value": "Frequently",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "cuisinePreferences",
+              "value": "[\"Italian\", \"Asian\"]",
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "{{userId}}"
+          ]
+        },
+        "description": "Updates user profile. Users can only update their own profile. Supports optional photo upload - old photo automatically deleted from Cloudinary. Requires authentication (USER role only)."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Delete User Account",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "{{userId}}"
+          ]
+        },
+        "description": "Soft deletes user account. User marked as deleted (isDeleted: true) but record remains in database. Users can only delete their own account. Requires authentication (USER role only)."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string",
+      "description": "Base URL for API - Change to your server URL"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT authentication token - Set after login"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string",
+      "description": "User ID - Set after creating/getting a user"
+    }
+  ]
+}

@@ -8,14 +8,13 @@ import config from '../../config';
 
 const loginUser = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUser(req.body);
-  const { refreshToken, accessToken } = result;
+  const { refreshToken, accessToken, user } = result;
 
-  res.cookie("refreshToken",refreshToken,{
+  res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: config.NODE_ENV === 'production'
   });
 
-  
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -23,6 +22,7 @@ const loginUser = catchAsync(async (req, res) => {
     data: {
       accessToken,
       refreshToken,
+      user,
     },
   });
 });

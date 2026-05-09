@@ -24,7 +24,6 @@ export const sendImageToCloudinary = (
           reject(error);
         }
         resolve(result as UploadApiResponse);
-        // delete a file asynchronously
         fs.unlink(path, (err) => {
           if (err) {
             console.log(err);
@@ -34,6 +33,19 @@ export const sendImageToCloudinary = (
         });
       },
     );
+  });
+};
+
+export const deleteImageFromCloudinary = (
+  publicId: string,
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(publicId, (error: any, result: any) => {
+      if (error) {
+        reject(error);
+      }
+      resolve();
+    });
   });
 };
 

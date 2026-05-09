@@ -7,16 +7,18 @@ const userSchema = new Schema<TUser>({
   name: { type: String, required:true },
   password: { type: String },
   email: { type: String, unique: true, required:true },
-  photo: { type: String, required:true }, 
+  photo: { type: String, required:true },
+  photoPublicId: { type: String, default: null },
+  isDeleted: { type: Boolean, default: false },
   role: {
     type: String,
     enum: [USER_ROLE.ADMIN, USER_ROLE.USER],
-    default: USER_ROLE.USER  
+    default: USER_ROLE.USER
   },
   status: {
     type: String,
     enum: [USER_STATUS.ACTIVE, USER_STATUS.BLOCKED],
-    default: USER_STATUS.ACTIVE  
+    default: USER_STATUS.ACTIVE
   },
   bio: {
     type: String,

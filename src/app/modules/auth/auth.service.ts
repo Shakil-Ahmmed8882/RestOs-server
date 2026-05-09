@@ -18,39 +18,14 @@ import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
 
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
-  const user = await UserModel.findOne({ email: payload.email });
+  let user = await UserModel.findOne({ email: payload.email });
 
   if (!user) {
     const userData = {
       ...payload,
       photo: payload.photo || demoProfileUrl,
     };
-    const user = await createUser(userData);
-
-    const jwtPayload = {
-      userId: user?._id,
-      name: user?.name,
-      email: user?.email,
-      role: user?.role,
-      photo: user?.photo as string,
-    };
-
-    const accessToken = createToken(
-      jwtPayload,
-      config.jwt_access_secret as string,
-      config.jwt_access_expires_in as string
-    );
-
-    const refreshToken = createToken(
-      jwtPayload,
-      config.jwt_refresh_secret as string,
-      config.jwt_refresh_expires_in as string
-    );
-
-    return {
-      accessToken,
-      refreshToken,
-    };
+    user = await createUser(userData);
   } else {
     if (payload.password && user.password) {
       const isPasswordMatched = await bcryptJs.compare(
@@ -62,33 +37,43 @@ const loginUser = async (payload: TLoginUser) => {
         throw new AppError(httpStatus.NOT_FOUND, "Password Incorrect!");
       }
     }
+  }
 
-    const jwtPayload = {
-      userId: user._id,
+  const jwtPayload = {
+    userId: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    photo: user.photo as string,
+  };
+
+  const accessToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in as string
+  );
+
+  const refreshToken = createToken(
+    jwtPayload,
+    config.jwt_refresh_secret as string,
+    config.jwt_refresh_expires_in as string
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      photo: user.photo as string,
-    };
-
-    const accessToken = createToken(
-      jwtPayload,
-      config.jwt_access_secret as string,
-      config.jwt_access_expires_in as string
-    );
-
-    const refreshToken = createToken(
-      jwtPayload,
-      config.jwt_refresh_secret as string,
-      config.jwt_refresh_expires_in as string
-    );
-
-    return {
-      accessToken,
-      refreshToken,
-    };
-  }
-  // checking if the user is already deleted
+      photo: user.photo,
+      bio: user.bio,
+      location: user.location,
+      contactNumber: user.contactNumber,
+      status: user.status,
+    },
+  };
 };
 
 const refreshToken = async (token: string) => {

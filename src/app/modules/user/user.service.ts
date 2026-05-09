@@ -9,6 +9,7 @@ import {
   updateNestedFields,
 } from "../../helper/update.helper";
 import validateUserAndStatus from "../../helper/validateUserStatus";
+import { sendImageToCloudinary, deleteImageFromCloudinary } from "../../utils/sendImageToCloudinary";
 
 const createUser = async (payload: TUser) => {
   const user = await UserModel.findOne({ email: payload.email });
@@ -40,75 +41,108 @@ const getSingleUser = async (userId: string) => {
   return user;
 };
 
-const updateUser = async (userId: string, payload: Partial<TUser>) => {
-  // Fetch existing user data
-  const existingUserData = await UserModel.findById(userId);
-  if (!existingUserData) {
-    throw new AppError(httpStatus.NOT_FOUND, "Oops! User is not found!");
-  }
+const updateUser = async (userId: string, payload: Partial<TUser>, file?: Express.Multer.File) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-
-  const {
-    cuisinePreferences,
-    favoriteRestaurants,
-    dietaryRestrictions,
-    preferredMealTimes,
-    paymentMethods,
-    socialMedia = {},
-    ...rest
-  } = payload;
-
-  // Initialize modified fields for socialMedia and arrays
-  let modifiedFieldspdata: Record<string, string | undefined> = {};
-  let modifiedArrayData: Record<string, any[]> = {};
-
-  // Handle socialMedia updates dynamically
-  if (socialMedia && Object.keys(socialMedia).length > 0) {
-    for (const [key, value] of Object.entries(socialMedia)) {
-      modifiedFieldspdata[`socialMedia.${key}`] = value;
+  try {
+    const existingUserData = await UserModel.findById(userId).session(session);
+    if (!existingUserData) {
+      await session.abortTransaction();
+      throw new AppError(httpStatus.NOT_FOUND, "Oops! User is not found!");
     }
+
+    const {
+      cuisinePreferences,
+      favoriteRestaurants,
+      dietaryRestrictions,
+      preferredMealTimes,
+      paymentMethods,
+      socialMedia = {},
+      ...rest
+    } = payload;
+
+    let modifiedFieldspdata: Record<string, string | undefined> = {};
+    let modifiedArrayData: Record<string, any[]> = {};
+
+    // Handle photo upload if file is provided
+    if (file) {
+      const uploadedImage = await sendImageToCloudinary(
+        `user-${userId}-${Date.now()}`,
+        file.path
+      );
+      modifiedFieldspdata.photo = (uploadedImage as any).secure_url;
+      modifiedFieldspdata.photoPublicId = (uploadedImage as any).public_id;
+
+      // Delete old photo from Cloudinary if it exists
+      if (existingUserData.photoPublicId) {
+        await deleteImageFromCloudinary(existingUserData.photoPublicId);
+      }
+    }
+
+    // Handle socialMedia updates dynamically
+    if (socialMedia && Object.keys(socialMedia).length > 0) {
+      for (const [key, value] of Object.entries(socialMedia)) {
+        modifiedFieldspdata[`socialMedia.${key}`] = value;
+      }
+    }
+
+    updateNestedFields("socialMedia", socialMedia, modifiedFieldspdata);
+    updateArrayField("cuisinePreferences", cuisinePreferences, modifiedArrayData);
+    updateArrayField("favoriteRestaurants", favoriteRestaurants, modifiedArrayData);
+    updateArrayField("dietaryRestrictions", dietaryRestrictions, modifiedArrayData);
+    updateArrayField("preferredMealTimes", preferredMealTimes, modifiedArrayData);
+    updateArrayField("paymentMethods", paymentMethods, modifiedArrayData);
+
+    const result = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        ...rest,
+        ...modifiedFieldspdata,
+        ...modifiedArrayData,
+      },
+      { runValidators: true, new: true, session }
+    );
+
+    await session.commitTransaction();
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
   }
-
-  // Use the helper function for socialMedia updates
-  updateNestedFields("socialMedia", socialMedia, modifiedFieldspdata);
-
-  // Use the helper function for each array field
-  updateArrayField("cuisinePreferences", cuisinePreferences, modifiedArrayData);
-
-  updateArrayField(
-    "favoriteRestaurants",
-    favoriteRestaurants,
-    modifiedArrayData
-  );
-  updateArrayField(
-    "dietaryRestrictions",
-    dietaryRestrictions,
-    modifiedArrayData
-  );
-  updateArrayField("preferredMealTimes", preferredMealTimes, modifiedArrayData);
-  updateArrayField("paymentMethods", paymentMethods, modifiedArrayData);
-
-  // Combine direct values, socialMedia updates, and array replacements into one update object
-  const result = await UserModel.updateOne(
-    { _id: userId },
-    {
-      ...rest,
-      ...modifiedFieldspdata,
-      ...modifiedArrayData,
-    },
-    { runValidators: true, new: true }
-  );
-
-  return result;
 };
 
 
 
 
 const deleteUser = async (userId: string) => {
-  // Fetch existing user data
-  const user = await UserModel.findByIdAndDelete(userId)
-  return user;
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const user = await UserModel.findById(userId).session(session);
+    if (!user) {
+      await session.abortTransaction();
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Soft delete by setting isDeleted flag
+    const result = await UserModel.findByIdAndUpdate(
+      userId,
+      { isDeleted: true },
+      { new: true, session }
+    );
+
+    await session.commitTransaction();
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
 };
 
 

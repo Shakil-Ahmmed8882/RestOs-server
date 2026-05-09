@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { userServices } from "./user.service";
+import AppError from "../../errors/AppError";
 
 const handleCreateUser = catchAsync(async (req, res) => {
   const user = req.body;
@@ -27,7 +28,7 @@ const handleGetAllUsers = catchAsync(async (req, res) => {
 });
 
 const HandleGetSingleUser = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  const { userId } = req.params;
   const result = await userServices.getSingleUser(userId);
 
   sendResponse(res, {
@@ -40,10 +41,13 @@ const HandleGetSingleUser = catchAsync(async (req, res) => {
 
 const handleUpdateUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
-  const result = await userServices.updateUser(userId, req.body);
+  const { userId: authenticatedUserId } = req.user;
 
+  if (userId !== authenticatedUserId) {
+    throw new AppError(httpStatus.FORBIDDEN, "You can only update your own profile");
+  }
 
-  
+  const result = await userServices.updateUser(userId, req.body, req.file);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -54,6 +58,12 @@ const handleUpdateUser = catchAsync(async (req, res) => {
 });
 const handleDeleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
+  const { userId: authenticatedUserId } = req.user;
+
+  if (userId !== authenticatedUserId) {
+    throw new AppError(httpStatus.FORBIDDEN, "You can only delete your own account");
+  }
+
   const result = await userServices.deleteUser(userId);
 
   sendResponse(res, {

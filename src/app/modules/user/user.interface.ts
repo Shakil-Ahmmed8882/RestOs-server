@@ -1,21 +1,24 @@
 // user.interface.ts
 export interface TUser {
+  _id?: string;
   name: string;
   email: string;
   bio?: string;
   photo?: string;
+  photoPublicId?: string;
+  isDeleted?: boolean;
   password?: string;
   status: string;
   role: string;
   location?: string;
-  cuisinePreferences?: string[];       // Preferred cuisines
-  favoriteRestaurants?: string[];      // List of favorite restaurants
-  dietaryRestrictions?: string[];      // E.g., "Vegan", "Gluten-Free"
+  cuisinePreferences?: string[];
+  favoriteRestaurants?: string[];
+  dietaryRestrictions?: string[];
   contactNumber?: string;
-  socialMedia?: socialMedia,
-  diningFrequency?: string;            // E.g., "Occasionally", "Frequently"
-  preferredMealTimes?: string[];       // E.g., "Breakfast", "Lunch", "Dinner"
-  paymentMethods?: string[];           // Preferred payment methods
+  socialMedia?: socialMedia;
+  diningFrequency?: string;
+  preferredMealTimes?: string[];
+  paymentMethods?: string[];
 }
 
 
