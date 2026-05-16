@@ -31,4 +31,7 @@ export default {
   // is_live: process.env.IS_LIVE,
   // server_url: process.env.SERVER_URL,
   // client_url: process.env.CLIENT_URL,
+
+  demo_admin_email: process.env.DEMO_ADMIN_EMAIL,
+  demo_admin_password: process.env.DEMO_ADMIN_PASSWORD,
 };

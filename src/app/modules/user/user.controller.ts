@@ -75,10 +75,25 @@ const handleDeleteUser = catchAsync(async (req, res) => {
   });
 });
 
+const handleUpdateUserRoleAndStatus = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const payload = req.body;
+
+  const result = await userServices.updateUserRoleAndStatus(userId, payload);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User role and status updated successfully",
+    data: result,
+  });
+});
+
 export const userControllers = {
   handleCreateUser,
   handleGetAllUsers,
   HandleGetSingleUser,
   handleUpdateUser,
-  handleDeleteUser
+  handleDeleteUser,
+  handleUpdateUserRoleAndStatus,
 };

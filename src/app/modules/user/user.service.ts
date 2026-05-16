@@ -184,11 +184,36 @@ const deleteUser = async (userId: string) => {
   }
 };
 
+const updateUserRoleAndStatus = async (
+  userId: string,
+  payload: { role?: string; status?: string }
+) => {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const updateData: Record<string, any> = {};
+  if (payload.role) {
+    updateData.role = payload.role;
+  }
+  if (payload.status) {
+    updateData.status = payload.status;
+  }
+
+  const result = await UserModel.findByIdAndUpdate(userId, updateData, {
+    new: true,
+    runValidators: true,
+  });
+
+  return result;
+};
 
 export const userServices = {
   createUser,
   getAllUsers,
   getSingleUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateUserRoleAndStatus,
 };

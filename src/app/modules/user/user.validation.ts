@@ -32,7 +32,21 @@ const updateUserValidationSchema = z.object({
 });
 
 
+const updateUserRoleAndStatusValidationSchema = z.object({
+  body: z.object({
+    role: z.enum(["ADMIN", "USER"]).optional(),
+    status: z.enum(["ACTIVE", "BLOCKED"]).optional(),
+  }).refine(
+    (data) => data.role !== undefined || data.status !== undefined,
+    {
+      message: "At least one of 'role' or 'status' must be provided",
+      path: ["body"],
+    }
+  ),
+});
+
 export const userValidations = {
   createUserValidationSchema,
   updateUserValidationSchema,
+  updateUserRoleAndStatusValidationSchema,
 };
