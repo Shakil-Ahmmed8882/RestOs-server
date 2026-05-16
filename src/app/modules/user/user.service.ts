@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import QueryBuilder from "../../builder/QueryBuilder";
 import AppError from "../../errors/AppError";
-import { socialMedia, TUser } from "./user.interface";
+import { TUser } from "./user.interface";
 import UserModel from "./user.model";
 import mongoose from "mongoose";
 import {
@@ -9,7 +9,13 @@ import {
   updateNestedFields,
 } from "../../helper/update.helper";
 import validateUserAndStatus from "../../helper/validateUserStatus";
-import { sendImageToCloudinary, deleteImageFromCloudinary } from "../../utils/sendImageToCloudinary";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../media-management";
+
+const buildUserPublicId = (email: string) =>
+  `user-${email.replace(/[^a-zA-Z0-9_\-]/g, "_")}`;
 
 const createUser = async (payload: TUser, file?: Express.Multer.File) => {
   const existingUser = await UserModel.findOne({ email: payload.email });
@@ -17,17 +23,16 @@ const createUser = async (payload: TUser, file?: Express.Multer.File) => {
 
   const userData = { ...payload };
 
-  // Handle photo upload if file is provided
-  if (file) {
-    const uploadedImage = await sendImageToCloudinary(
-      `user-${payload.email}-${Date.now()}`,
-      file.path
-    );
-    userData.photo = (uploadedImage as any).secure_url;
-    userData.photoPublicId = (uploadedImage as any).public_id;
+  if (file?.buffer) {
+    const uploaded = await uploadToCloudinary({
+      fileBuffer: file.buffer,
+      folder: "users",
+      publicId: buildUserPublicId(payload.email),
+    });
+    userData.photo = uploaded.url;
+    userData.photoPublicId = uploaded.public_id;
   }
 
-  // Hash password using bcryptjs
   const bcryptJs = require("bcryptjs");
   const hashedPassword = await bcryptJs.hash(
     payload.password,
@@ -55,7 +60,6 @@ const getAllUsers = async (query: Record<string, unknown>) => {
 };
 
 const getSingleUser = async (userId: string) => {
-  // Fetch existing user data
   const user = await validateUserAndStatus(userId);
   return user;
 };
@@ -63,6 +67,10 @@ const getSingleUser = async (userId: string) => {
 const updateUser = async (userId: string, payload: Partial<TUser>, file?: Express.Multer.File) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
+  // Track the new public_id outside the txn so we can roll it back if the DB write fails.
+  let newlyUploadedPublicId: string | undefined;
+  let oldPublicIdToDelete: string | undefined;
 
   try {
     const existingUserData = await UserModel.findById(userId).session(session);
@@ -81,25 +89,29 @@ const updateUser = async (userId: string, payload: Partial<TUser>, file?: Expres
       ...rest
     } = payload;
 
-    let modifiedFieldspdata: Record<string, string | undefined> = {};
-    let modifiedArrayData: Record<string, any[]> = {};
+    const modifiedFieldspdata: Record<string, string | undefined> = {};
+    const modifiedArrayData: Record<string, any[]> = {};
 
-    // Handle photo upload if file is provided
-    if (file) {
-      const uploadedImage = await sendImageToCloudinary(
-        `user-${userId}-${Date.now()}`,
-        file.path
-      );
-      modifiedFieldspdata.photo = (uploadedImage as any).secure_url;
-      modifiedFieldspdata.photoPublicId = (uploadedImage as any).public_id;
+    if (file?.buffer) {
+      const uploaded = await uploadToCloudinary({
+        fileBuffer: file.buffer,
+        folder: "users",
+        publicId: `user-${userId}`,
+        overwrite: true,
+      });
+      modifiedFieldspdata.photo = uploaded.url;
+      modifiedFieldspdata.photoPublicId = uploaded.public_id;
+      newlyUploadedPublicId = uploaded.public_id;
 
-      // Delete old photo from Cloudinary if it exists
-      if (existingUserData.photoPublicId) {
-        await deleteImageFromCloudinary(existingUserData.photoPublicId);
+      // Only schedule deletion of old asset if it has a different public_id.
+      if (
+        existingUserData.photoPublicId &&
+        existingUserData.photoPublicId !== uploaded.public_id
+      ) {
+        oldPublicIdToDelete = existingUserData.photoPublicId;
       }
     }
 
-    // Handle socialMedia updates dynamically
     if (socialMedia && Object.keys(socialMedia).length > 0) {
       for (const [key, value] of Object.entries(socialMedia)) {
         modifiedFieldspdata[`socialMedia.${key}`] = value;
@@ -124,17 +136,25 @@ const updateUser = async (userId: string, payload: Partial<TUser>, file?: Expres
     );
 
     await session.commitTransaction();
+
+    // DB is committed. Now safe to delete the orphaned old image.
+    if (oldPublicIdToDelete) {
+      await deleteFromCloudinary(oldPublicIdToDelete);
+    }
+
     return result;
   } catch (error) {
     await session.abortTransaction();
+
+    // Roll back the freshly uploaded asset since the DB write failed.
+    if (newlyUploadedPublicId) {
+      await deleteFromCloudinary(newlyUploadedPublicId);
+    }
     throw error;
   } finally {
     await session.endSession();
   }
 };
-
-
-
 
 const deleteUser = async (userId: string) => {
   const session = await mongoose.startSession();
@@ -147,7 +167,7 @@ const deleteUser = async (userId: string) => {
       throw new AppError(httpStatus.NOT_FOUND, "User not found");
     }
 
-    // Soft delete by setting isDeleted flag
+    // Soft delete only — keep the image so the user can be restored.
     const result = await UserModel.findByIdAndUpdate(
       userId,
       { isDeleted: true },

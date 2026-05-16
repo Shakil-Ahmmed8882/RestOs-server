@@ -10,6 +10,7 @@ export interface TReview {
     foodName: string;
     status?: string;
     foodImage: string;
+    foodImagePublicId?: string;
     foodCategory: string;
     price: number;
     discountPercent?: number;

@@ -1,22 +1,24 @@
 import { Request, Response, Router } from "express";
-import { sendImageToCloudinary, upload } from "../../utils/sendImageToCloudinary";
+import { uploadImage, uploadToCloudinary } from "../media-management";
 
 const router = Router();
 
-router.post("/", async (req: Request, res: Response) => {
-  console.log({ file: req.file });
-  let testImag;
-  if (req.file) {
-    const imageName = `${Math.floor(Math.random() * 10)}-name`;
-    const path = req.file?.path;
-
-    //send image to cloudinary
-    const { secure_url } = await sendImageToCloudinary(imageName, path);
-    testImag = secure_url as string;
-  }
-
-  console.log(testImag);
-  res.send("test file upload ");
-});
+router.post(
+  "/",
+  uploadImage.single("file"),
+  async (req: Request, res: Response) => {
+    let testImg: string | undefined;
+    if (req.file?.buffer) {
+      const imageName = `test-${Math.floor(Math.random() * 10)}-${Date.now()}`;
+      const uploaded = await uploadToCloudinary({
+        fileBuffer: req.file.buffer,
+        folder: "tests",
+        publicId: imageName,
+      });
+      testImg = uploaded.url;
+    }
+    res.send({ message: "test file upload", url: testImg });
+  },
+);
 
 export const testRoutes = router;

@@ -3,6 +3,7 @@ export interface TFoodCategory extends Document {
   name: string;
   description?: string;
   image: string;
+  imagePublicId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

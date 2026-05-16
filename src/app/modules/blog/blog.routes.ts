@@ -2,14 +2,14 @@ import { NextFunction, Request, Response, Router } from "express";
 import validateRequest from "../../utils/validateRequest";
 import { blogValidations } from "./blog.validation";
 import { blogControllers } from "./blog.controller";
-import { upload } from "../../utils/sendImageToCloudinary";
+import { uploadImage } from "../media-management";
 import parseBody from "../../utils/parseBody";
 
 const router = Router();
 
 router.post(
   "/create",
-  upload.single("file"),
+  uploadImage.single("file"),
   parseBody,
   validateRequest(blogValidations.createBlogValidationSchema),
   blogControllers.handleCreateBlog

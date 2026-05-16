@@ -5,6 +5,7 @@ export interface IBlog extends Document {
   instructions: string[];
   tags?: string[];
   image?: string;
+  imagePublicId?: string;
   author: {
     user: string;
     name: string;

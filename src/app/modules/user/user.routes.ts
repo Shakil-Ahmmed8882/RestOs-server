@@ -4,7 +4,7 @@ import { userValidations } from "./user.validation";
 import { userControllers } from "./user.controller";
 import auth from "../../middlewares/auth";
 import { USER_ROLE } from "../../constants";
-import { upload } from "../../utils/sendImageToCloudinary";
+import { uploadImage } from "../media-management";
 import parseBody from "../../utils/parseBody";
 
 const router = Router();
@@ -12,7 +12,7 @@ const router = Router();
 router.post(
   "/create-user",
   auth(USER_ROLE.ADMIN),
-  upload.single("photo"),
+  uploadImage.single("photo"),
   parseBody,
   validateRequest(userValidations.createUserValidationSchema),
   userControllers.handleCreateUser
@@ -22,7 +22,7 @@ router.get("/:userId", auth(USER_ROLE.USER, USER_ROLE.ADMIN), userControllers.Ha
 router.patch(
   "/:userId",
   auth(USER_ROLE.USER),
-  upload.single("photo"),
+  uploadImage.single("photo"),
   validateRequest(userValidations.updateUserValidationSchema),
   userControllers.handleUpdateUser
 );

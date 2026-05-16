@@ -14,6 +14,7 @@ const foodDataSchema = new Schema<TFoodData>({
   foodName: { type: String, required: true },
   status: { type: String, required: false, default: "available" },
   foodImage: { type: String, required: true },
+  foodImagePublicId: { type: String, default: null },
   foodCategory: { type: String, required: true },
   price: { type: Number, required: true },
   discountPercent: { type: Number, default: 0, min: 0, max: 100 },

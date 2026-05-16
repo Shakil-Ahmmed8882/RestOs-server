@@ -5,7 +5,7 @@ import { foodCategoryControllers } from "./foodCategory.controller";
 import auth from "../../middlewares/auth";
 import { USER_ROLE } from "../../constants";
 import { foodCategoryValidations } from "./foodCategory.validation";
-import { upload } from "../../utils/sendImageToCloudinary";
+import { uploadImage } from "../media-management";
 import parseBody from "../../utils/parseBody";
 
 const router = Router();
@@ -14,7 +14,7 @@ const router = Router();
 router.post(
   "/create-category",
   auth(USER_ROLE.ADMIN),
-  upload.single("file"),
+  uploadImage.single("file"),
   parseBody,
   validateRequest(foodCategoryValidations.createFoodCategoryValidationSchema),
   foodCategoryControllers.handleCreateCategory
@@ -30,7 +30,7 @@ router.get("/:categoryId", foodCategoryControllers.handleGetSingleCategory);
 router.patch(
   "/:categoryId",
   auth(USER_ROLE.ADMIN),
-  upload.single("file"),
+  uploadImage.single("file"),
   parseBody,
   validateRequest(foodCategoryValidations.updateFoodCategoryValidationSchema),
   foodCategoryControllers.handleUpdateCategory

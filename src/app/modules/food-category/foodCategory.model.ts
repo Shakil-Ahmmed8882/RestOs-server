@@ -6,6 +6,7 @@ const foodCategorySchema = new Schema<TFoodCategory>({
   name: { type: String, required: true, unique: true },
   description: { type: String },
   image: { type: String },
+  imagePublicId: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

@@ -2,33 +2,40 @@ import mongoose from "mongoose";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { TFoodData } from "./food.interface";
 import FoodModel from "./food.model";
-import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../media-management";
 
-const createFood = async (file: any, payload: TFoodData) => {
+const buildFoodPublicId = (payload: Pick<TFoodData, "foodName" | "food_origin">) =>
+  `food-${payload.foodName}-${payload.food_origin}`;
+
+const createFood = async (file: Express.Multer.File | undefined, payload: TFoodData) => {
   const session = await mongoose.startSession();
-
-  // Begin transaction
+  let uploadedPublicIdForRollback: string | undefined;
   session.startTransaction();
 
   try {
-    if (file) {
-      const imageName = `${payload.foodName}_${payload.food_origin}`;
-      const path = file.path;
-
-      // Send image to cloud storage and retrieve URL
-      const { secure_url } = await sendImageToCloudinary(imageName, path);
-      payload.foodImage = secure_url as string;
+    if (file?.buffer) {
+      const uploaded = await uploadToCloudinary({
+        fileBuffer: file.buffer,
+        folder: "foods",
+        publicId: buildFoodPublicId(payload),
+      });
+      payload.foodImage = uploaded.url;
+      payload.foodImagePublicId = uploaded.public_id;
+      uploadedPublicIdForRollback = uploaded.public_id;
     }
 
-    const createdFood = await FoodModel.create([payload], {
-      new: true,
-      session,
-    });
+    const createdFood = await FoodModel.create([payload], { session });
 
     await session.commitTransaction();
     return { createdFood };
   } catch (error: any) {
     await session.abortTransaction();
+    if (uploadedPublicIdForRollback) {
+      await deleteFromCloudinary(uploadedPublicIdForRollback);
+    }
     console.error("Error creating food:", error.message);
     throw error;
   } finally {
@@ -43,11 +50,9 @@ const getSingleFood = async (id: string) => {
     return { food: null, relatedFoods: [], message: "" };
   }
 
-  // Get related foods based on priority matching
   let relatedFoods = await FoodModel.find({
     _id: { $ne: id },
     $or: [
-      // Same category with similar price (±20%)
       {
         foodCategory: food.foodCategory,
         price: {
@@ -55,20 +60,12 @@ const getSingleFood = async (id: string) => {
           $lte: food.price * 1.2,
         },
       },
-      // Same category
-      {
-        foodCategory: food.foodCategory,
-      },
-      // Matching tags
+      { foodCategory: food.foodCategory },
       ...(food.tags && food.tags.length > 0
         ? [{ tags: { $in: food.tags } }]
         : []),
-      // Same cuisine
       ...(food.cuisine ? [{ cuisine: food.cuisine }] : []),
-      // Similar dietary preferences
-      {
-        isVeg: food.isVeg,
-      },
+      { isVeg: food.isVeg },
     ],
   })
     .sort({ averageRating: -1, orders: -1 })
@@ -77,7 +74,6 @@ const getSingleFood = async (id: string) => {
 
   let message = "All related foods";
 
-  // If no related foods found, get top-selling foods
   if (relatedFoods.length === 0) {
     relatedFoods = await FoodModel.find({ _id: { $ne: id } })
       .sort({ orders: -1, averageRating: -1 })
@@ -86,11 +82,7 @@ const getSingleFood = async (id: string) => {
     message = "Top selling foods";
   }
 
-  return {
-    food,
-    relatedFoods,
-    message,
-  };
+  return { food, relatedFoods, message };
 };
 
 const getTopSellingFood = async (query: Record<string, unknown>) => {
@@ -104,16 +96,13 @@ const getTopSellingFood = async (query: Record<string, unknown>) => {
 };
 
 const getAllFoods = async (query: Record<string, unknown>) => {
-  // Build comprehensive pre-filters
   const preFilter: Record<string, unknown> = {};
 
-  // Boolean filters
   if (query.isVeg !== undefined) preFilter.isVeg = query.isVeg === "true";
   if (query.isSpicy !== undefined) preFilter.isSpicy = query.isSpicy === "true";
   if (query.isGlutenFree !== undefined) preFilter.isGlutenFree = query.isGlutenFree === "true";
   if (query.bestseller !== undefined) preFilter.bestseller = query.bestseller === "true";
 
-  // Rating filter
   if (query.minRating) {
     const minRating = parseFloat(query.minRating as string);
     if (!isNaN(minRating)) {
@@ -121,7 +110,6 @@ const getAllFoods = async (query: Record<string, unknown>) => {
     }
   }
 
-  // Price range filter
   if (query.minPrice || query.maxPrice) {
     preFilter.price = {};
     if (query.minPrice) {
@@ -132,7 +120,6 @@ const getAllFoods = async (query: Record<string, unknown>) => {
     }
   }
 
-  // Preparation time filter
   if (query.maxPrepTime) {
     const maxTime = parseInt(query.maxPrepTime as string);
     if (!isNaN(maxTime)) {
@@ -140,27 +127,22 @@ const getAllFoods = async (query: Record<string, unknown>) => {
     }
   }
 
-  // Tags/ingredients filter
   if (query.tags) {
     preFilter.tags = { $in: (query.tags as string).split(",") };
   }
 
-  // Discount filter
   if (query.hasDiscount === "true") {
     preFilter.discountPercent = { $gt: 0 };
   }
 
-  // Stock availability filter
   if (query.inStock === "true") {
     preFilter.quantity = { $gt: 0 };
   }
 
-  // Cuisine filter
   if (query.cuisine) {
     preFilter.cuisine = query.cuisine;
   }
 
-  // Status filter
   if (query.status) {
     preFilter.status = query.status;
   }
@@ -180,22 +162,41 @@ const getAllFoods = async (query: Record<string, unknown>) => {
   return { data: result, meta };
 };
 
-const updateFood = async (foodId: string, file: any, payload: TFoodData) => {
+const updateFood = async (
+  foodId: string,
+  file: Express.Multer.File | undefined,
+  payload: TFoodData,
+) => {
   const session = await mongoose.startSession();
-
-  // Begin transaction
+  let uploadedPublicIdForRollback: string | undefined;
+  let oldPublicIdToDelete: string | undefined;
   session.startTransaction();
 
   try {
-    let img: string = "";
-    if (file) {
-      const imageName = `${payload.foodName}_${payload.food_origin}`;
-      const path = file.path;
+    const existing = await FoodModel.findById(foodId).session(session);
+    if (!existing) {
+      throw new Error("Food not found");
+    }
 
-      // Send image to cloud storage and retrieve URL
-      const { secure_url } = await sendImageToCloudinary(imageName, path);
-      payload.foodImage = secure_url as string;
-      img = secure_url as string;
+    if (file?.buffer) {
+      const uploaded = await uploadToCloudinary({
+        fileBuffer: file.buffer,
+        folder: "foods",
+        publicId: buildFoodPublicId({
+          foodName: payload.foodName ?? existing.foodName,
+          food_origin: payload.food_origin ?? existing.food_origin,
+        }),
+      });
+      payload.foodImage = uploaded.url;
+      payload.foodImagePublicId = uploaded.public_id;
+      uploadedPublicIdForRollback = uploaded.public_id;
+
+      if (
+        existing.foodImagePublicId &&
+        existing.foodImagePublicId !== uploaded.public_id
+      ) {
+        oldPublicIdToDelete = existing.foodImagePublicId;
+      }
     }
 
     const updatedFoodData = await FoodModel.findOneAndUpdate(
@@ -205,9 +206,17 @@ const updateFood = async (foodId: string, file: any, payload: TFoodData) => {
     );
 
     await session.commitTransaction();
-    return { updatedFoodData, img };
+
+    if (oldPublicIdToDelete) {
+      await deleteFromCloudinary(oldPublicIdToDelete);
+    }
+
+    return { updatedFoodData, img: updatedFoodData?.foodImage ?? "" };
   } catch (error: any) {
     await session.abortTransaction();
+    if (uploadedPublicIdForRollback) {
+      await deleteFromCloudinary(uploadedPublicIdForRollback);
+    }
     console.error("Error updating food:", error.message);
     throw error;
   } finally {
@@ -217,17 +226,21 @@ const updateFood = async (foodId: string, file: any, payload: TFoodData) => {
 
 const deleteFood = async (foodId: string) => {
   const session = await mongoose.startSession();
-
-  // Begin transaction
   session.startTransaction();
 
   try {
     const deletedFood = await FoodModel.findOneAndDelete(
       { _id: foodId },
-      { new: true, session }
+      { session }
     );
 
     await session.commitTransaction();
+
+    // DB commit succeeded → clean up the associated Cloudinary asset.
+    if (deletedFood?.foodImagePublicId) {
+      await deleteFromCloudinary(deletedFood.foodImagePublicId);
+    }
+
     return { deletedFood };
   } catch (error: any) {
     await session.abortTransaction();
@@ -240,18 +253,13 @@ const deleteFood = async (foodId: string) => {
 
 const addReview = async (foodId: string, reviewData: any) => {
   const session = await mongoose.startSession();
-
   session.startTransaction();
 
   try {
     const food = await FoodModel.findById(foodId, {}, { session });
-
-    if (!food) {
-      throw new Error("Food not found");
-    }
+    if (!food) throw new Error("Food not found");
 
     food.reviews.push(reviewData);
-
     const updatedFood = await food.save({ session });
 
     await session.commitTransaction();

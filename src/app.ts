@@ -20,6 +20,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
+  'https://rest-os-client.vercel.app',
   'https://rest-os-server-lyart.vercel.app',
 ];
 

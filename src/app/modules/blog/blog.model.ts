@@ -9,6 +9,7 @@ const blogSchema = new Schema<IBlog>({
   tags: { type: [String], required: true },
   instructions: { type: [String], required: true },
   image: { type: String, required: true },
+  imagePublicId: { type: String, default: null },
   author: {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },

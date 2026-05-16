@@ -2,7 +2,7 @@ import express from 'express';
 import validateRequest from '../../middlewares/validateRequest';
 import { AuthValidation } from './auth.validation';
 import { AuthControllers } from './auth.controller';
-import { upload } from '../../utils/sendImageToCloudinary';
+import { uploadImage } from '../media-management';
 import auth from '../../middlewares/auth';
 
 
@@ -16,7 +16,7 @@ router.post(
 
 router.post(
   '/register',
-  upload.single('photo'),
+  uploadImage.single('photo'),
   validateRequest(AuthValidation.registerUserValidationSchema),
   AuthControllers.registerUser,
 );

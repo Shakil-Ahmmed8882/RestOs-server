@@ -14,7 +14,7 @@ import { createToken, verifyToken, JwtPayloadType } from "./auth.utils";
 import { demoProfileUrl } from "../../shared";
 import { USER_ROLE } from "../../constants";
 import { sendEmail } from "../../utils/sendEmail";
-import { sendImageToCloudinary } from "../../utils/sendImageToCloudinary";
+import { uploadToCloudinary, deleteFromCloudinary } from "../media-management";
 
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
@@ -110,6 +110,8 @@ const refreshToken = async (token: string) => {
 
 const registerUser = async (userData: TLoginUser, file?: Express.Multer.File) => {
   const session = await mongoose.startSession();
+  // Hoisted so the catch block can roll back the upload if the DB write fails.
+  let uploadedPublicIdForRollback: string | undefined;
   try {
     session.startTransaction();
 
@@ -120,14 +122,17 @@ const registerUser = async (userData: TLoginUser, file?: Express.Multer.File) =>
     }
 
     let photoUrl = demoProfileUrl;
+    let photoPublicId: string | undefined;
 
-    // Handle image upload if file is provided
-    if (file) {
-      const uploadedImage = await sendImageToCloudinary(
-        `user-${userData.email}-${Date.now()}`,
-        file.path
-      );
-      photoUrl = (uploadedImage as any).secure_url;
+    if (file?.buffer) {
+      const uploaded = await uploadToCloudinary({
+        fileBuffer: file.buffer,
+        folder: "users",
+        publicId: `user-${userData.email.replace(/[^a-zA-Z0-9_\-]/g, "_")}`,
+      });
+      photoUrl = uploaded.url;
+      photoPublicId = uploaded.public_id;
+      uploadedPublicIdForRollback = uploaded.public_id;
     }
 
     if (userData.password) {
@@ -142,6 +147,7 @@ const registerUser = async (userData: TLoginUser, file?: Express.Multer.File) =>
         {
           ...userData,
           photo: photoUrl,
+          ...(photoPublicId ? { photoPublicId } : {}),
         },
       ],
       { session }
@@ -187,6 +193,9 @@ const registerUser = async (userData: TLoginUser, file?: Express.Multer.File) =>
   } catch (error: any) {
     await session.abortTransaction();
     await session.endSession();
+    if (uploadedPublicIdForRollback) {
+      await deleteFromCloudinary(uploadedPublicIdForRollback);
+    }
     console.error("Transaction aborted:", error.message);
     throw error;
   } finally {
