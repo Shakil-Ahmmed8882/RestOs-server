@@ -3,13 +3,14 @@ import mongoose, { Schema } from "mongoose";
 import { TUser } from "./user.interface";
 import { USER_ROLE, USER_STATUS } from "../../constants";
 
-const userSchema = new Schema<TUser>({
-  name: { type: String, required:true },
-  password: { type: String },
-  email: { type: String, unique: true, required:true },
-  photo: { type: String, required:true },
-  photoPublicId: { type: String, default: null },
-  isDeleted: { type: Boolean, default: false },
+const userSchema = new Schema<TUser>(
+  {
+    name: { type: String, required: true },
+    password: { type: String },
+    email: { type: String, unique: true, required: true },
+    photo: { type: String, required: true },
+    photoPublicId: { type: String, default: null },
+    isDeleted: { type: Boolean, default: false },
   role: {
     type: String,
     enum: [USER_ROLE.ADMIN, USER_ROLE.USER],
@@ -44,12 +45,14 @@ const userSchema = new Schema<TUser>({
     enum: ["Breakfast", "Lunch", "Dinner"],
     default: ["Lunch"]  
   }],
-  paymentMethods: [{
-    type: String,
-    enum: ["Cash", "Credit Card", "Digital Wallet"],
-    default: ["Cash"]  
-  }]
-});
+    paymentMethods: [{
+      type: String,
+      enum: ["Cash", "Credit Card", "Digital Wallet"],
+      default: ["Cash"]
+    }]
+  },
+  { timestamps: true }
+);
 
 const UserModel = mongoose.model<TUser>("User", userSchema);
 

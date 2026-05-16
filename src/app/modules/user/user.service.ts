@@ -45,11 +45,12 @@ const createUser = async (payload: TUser, file?: Express.Multer.File) => {
 };
 
 const getAllUsers = async (query: Record<string, unknown>) => {
-  const userModelQuery = new QueryBuilder(UserModel.find(), query).search([
-    "name",
-    "email",
-    "contactNumber",
-  ]).fields().filter().paginate();
+  const userModelQuery = new QueryBuilder(UserModel.find({ isDeleted: false }), query)
+    .search(["name", "email", "contactNumber"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
   const result = await userModelQuery.modelQuery;
   const meta = await userModelQuery.countTotal();
 
