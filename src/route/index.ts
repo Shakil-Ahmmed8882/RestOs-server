@@ -13,6 +13,7 @@ import { analyticRoutes } from "../app/modules/analytics/analytics.route";
 import { foodCategoryRoutes } from "../app/modules/food-category/foodCategory.route";
 import { searchRoutes } from "../app/modules/search/search.route";
 import { paymentRoutes } from "../app/modules/payment/payment.route";
+import { profileRoutes } from "../app/modules/profile/profile.routes";
 
 const router = Router();
 
@@ -72,6 +73,10 @@ const moduleRoutes = [
   {
     path: "/payments",
     route: paymentRoutes,
+  },
+  {
+    path: "/profile",
+    route: profileRoutes,
   },
 ];
 
