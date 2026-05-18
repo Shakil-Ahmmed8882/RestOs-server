@@ -3,19 +3,32 @@ import { Comment } from "./comment.model";
 import { IComment } from "./comment.interface";
 import httpStatus from "http-status";
 
-// import { JwtPayload } from 'jsonwebtoken';
-// import createAnalyticsRecord from '../../utils/createAnalyticsRecord';
-import mongoose, { Mongoose, Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { USER_STATUS } from "../../constants";
 import UserModel from "../user/user.model";
 import AppError from "../../errors/AppError";
 import BlogModel from "../blog/blog.model";
 import { JwtPayload } from "jsonwebtoken";
 import createAnalyticsRecord from "../analytics/analytics.service";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../media-management";
 
-const createComment = async (userId: string, comment: IComment) => {
-  // post and record it as analytics
+const USER_SAFE_FIELDS = "_id name email photo role status";
+
+const populateComment = (commentId: Types.ObjectId | string) =>
+  Comment.findById(commentId)
+    .populate({ path: "user", select: USER_SAFE_FIELDS })
+    .populate({ path: "replies.user", select: USER_SAFE_FIELDS });
+
+const createComment = async (
+  userId: string,
+  comment: IComment,
+  file?: Express.Multer.File
+) => {
   const session = await mongoose.startSession();
+  let uploadedPublicIdForRollback: string | undefined;
   try {
     session.startTransaction();
     const user = await UserModel.findById(userId);
@@ -40,14 +53,36 @@ const createComment = async (userId: string, comment: IComment) => {
       throw new AppError(httpStatus.NOT_FOUND, " This blog is deleted");
     }
 
+    let image: string | null = null;
+    let imagePublicId: string | null = null;
+    if (file?.buffer) {
+      const uploaded = await uploadToCloudinary({
+        fileBuffer: file.buffer,
+        folder: "comments",
+        publicId: `comment-${userId}-${Date.now()}`,
+      });
+      image = uploaded.url;
+      imagePublicId = uploaded.public_id;
+      uploadedPublicIdForRollback = uploaded.public_id;
+    }
+
     await BlogModel.findByIdAndUpdate(
       comment.blog,
       { $inc: { commentsCount: 1 } },
       { session }
     );
-    const commentResult = await Comment.create([{ ...comment, user: userId }], {
-      session,
-    });
+    const commentResult = await Comment.create(
+      [
+        {
+          blog: comment.blog,
+          comment: comment.comment,
+          user: userId,
+          image,
+          imagePublicId,
+        },
+      ],
+      { session }
+    );
 
     if (commentResult.length > 0) {
       await createAnalyticsRecord(
@@ -64,11 +99,12 @@ const createComment = async (userId: string, comment: IComment) => {
     }
 
     await session.commitTransaction();
-    await session.endSession();
-    return commentResult;
+    return await populateComment(commentResult[0]._id);
   } catch (error: any) {
     await session.abortTransaction();
-    await session.endSession();
+    if (uploadedPublicIdForRollback) {
+      await deleteFromCloudinary(uploadedPublicIdForRollback);
+    }
     console.error("Transaction aborted:", error.message);
     throw error;
   } finally {
@@ -81,7 +117,12 @@ const findCommentById = async (commentId: string) => {
 };
 
 const getAllComments = async (query: Record<string, unknown>) => {
-  const commentQuery = new QueryBuilder(Comment.find().populate("user"), query)
+  const commentQuery = new QueryBuilder(
+    Comment.find()
+      .populate({ path: "user", select: USER_SAFE_FIELDS })
+      .populate({ path: "replies.user", select: USER_SAFE_FIELDS }),
+    query
+  )
     .filter()
     .sort()
     .paginate()
@@ -108,10 +149,9 @@ const getAllCommentsOnSingleBlog = async (
     .paginate()
     .fields();
 
-  const result = await commentQuery.modelQuery.populate({
-    path: "user",
-    select: "name profile email photo",
-  });
+  const result = await commentQuery.modelQuery
+    .populate({ path: "user", select: USER_SAFE_FIELDS })
+    .populate({ path: "replies.user", select: USER_SAFE_FIELDS });
 
   const metaData = await commentQuery.countTotal();
   return {
@@ -123,7 +163,8 @@ const getAllCommentsOnSingleBlog = async (
 const updateCommentById = async (
   userId: string,
   commentId: string,
-  payload: Partial<IComment>
+  payload: Partial<IComment> & { removeImage?: boolean },
+  file?: Express.Multer.File
 ) => {
   const user = await UserModel.findById(userId);
 
@@ -143,32 +184,62 @@ const updateCommentById = async (
 
   if (comment.user.toString() !== userId.toString()) {
     throw new AppError(
-      httpStatus.NOT_FOUND,
+      httpStatus.FORBIDDEN,
       "Opps! You can't edit someone else's comment."
     );
   }
 
-  const result = await Comment.findByIdAndUpdate(commentId, payload, {
+  const { removeImage, ...rest } = payload;
+  const update: Partial<IComment> = { ...rest };
+  let oldPublicIdToDelete: string | null = null;
+
+  if (file?.buffer) {
+    const uploaded = await uploadToCloudinary({
+      fileBuffer: file.buffer,
+      folder: "comments",
+      publicId: `comment-${userId}-${Date.now()}`,
+    });
+    update.image = uploaded.url;
+    update.imagePublicId = uploaded.public_id;
+    oldPublicIdToDelete = comment.imagePublicId ?? null;
+  } else if (removeImage) {
+    update.image = null;
+    update.imagePublicId = null;
+    oldPublicIdToDelete = comment.imagePublicId ?? null;
+  }
+
+  const result = await Comment.findByIdAndUpdate(commentId, update, {
     new: true,
     runValidators: true,
-  });
+  })
+    .populate({ path: "user", select: USER_SAFE_FIELDS })
+    .populate({ path: "replies.user", select: USER_SAFE_FIELDS });
+
+  if (oldPublicIdToDelete) {
+    await deleteFromCloudinary(oldPublicIdToDelete);
+  }
+
   return result;
 };
 
 const deleteCommentById = async (commentId: string, user: JwtPayload) => {
-  // post and record it as analytics
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
 
     const comment = await Comment.findById(commentId);
+    if (!comment) {
+      throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+    }
 
-    // Check if the user is admin or the author of the post
     const isAuthorized =
       user.role === "ADMIN" ||
       comment.user.toString() === user.userId.toString();
     if (!isAuthorized) {
-      throw new Error("Not authorized to delete this comment");
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Not authorized to delete this comment"
+      );
     }
 
     await BlogModel.findByIdAndUpdate(comment.blog, {
@@ -177,7 +248,12 @@ const deleteCommentById = async (commentId: string, user: JwtPayload) => {
     const result = await Comment.findByIdAndDelete(commentId, { session });
 
     await session.commitTransaction();
-    return result[0];
+
+    if (comment.imagePublicId) {
+      await deleteFromCloudinary(comment.imagePublicId);
+    }
+
+    return result;
   } catch (error: any) {
     await session.abortTransaction();
     console.error("Transaction aborted:", error.message);
@@ -227,10 +303,10 @@ const addReplyToComment = async (
     comment.replies.push(reply);
 
     // Save the updated comment with the new reply
-    const updatedComment = await comment.save({ session });
+    await comment.save({ session });
 
     await session.commitTransaction();
-    return updatedComment;
+    return await populateComment(comment._id);
   } catch (error: any) {
     await session.abortTransaction();
     console.error("Transaction aborted:", error.message);

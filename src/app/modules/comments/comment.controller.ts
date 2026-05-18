@@ -4,9 +4,8 @@ import sendResponse from "../../utils/sendResponse";
 import { CommentService } from "./comment.service";
 
 const createComment = catchAsync(async (req, res) => {
-  // const userId = req.body.user
   const userId = req.user.userId;
-  const result = await CommentService.createComment(userId, req.body);
+  const result = await CommentService.createComment(userId, req.body, req.file);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -60,11 +59,11 @@ const updateCommentById = catchAsync(async (req, res) => {
   const { commentId } = req.params;
   const { userId } = req.user;
 
-  
   const result = await CommentService.updateCommentById(
     userId,
     commentId,
-    req.body
+    req.body,
+    req.file
   );
 
   sendResponse(res, {

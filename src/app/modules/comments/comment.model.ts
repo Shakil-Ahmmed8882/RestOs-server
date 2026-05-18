@@ -37,7 +37,15 @@ const commentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    replies: [replySchema], 
+    image: {
+      type: String,
+      default: null,
+    },
+    imagePublicId: {
+      type: String,
+      default: null,
+    },
+    replies: [replySchema],
     createdAt: {
       type: Date,
       default: Date.now,

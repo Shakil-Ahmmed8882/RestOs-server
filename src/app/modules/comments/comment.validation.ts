@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const toBoolean = z.preprocess((val) => {
+  if (typeof val === "boolean") return val;
+  if (typeof val === "string") return val.toLowerCase() === "true";
+  return undefined;
+}, z.boolean().optional());
+
 export const createCommentValidationSchema = z.object({
   body: z.object({
     blog: z.string().nonempty("blog ID is required"),
@@ -9,7 +15,8 @@ export const createCommentValidationSchema = z.object({
 
 export const updateCommentValidationSchema = z.object({
   body: z.object({
-    comment: z.string(),
+    comment: z.string().optional(),
+    removeImage: toBoolean,
   }),
 });
 

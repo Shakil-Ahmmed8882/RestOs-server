@@ -4,16 +4,20 @@ import { CommentController } from "./comment.controller";
 import {
   createCommentValidationSchema,
   updateCommentValidationSchema,
-} from "./comment.validation"; // Ensure to create these validation schemas
+} from "./comment.validation";
 import auth from "../../middlewares/auth";
 import { USER_ROLE } from "../../constants";
+import { uploadImage } from "../media-management";
+import parseBody from "../../utils/parseBody";
 
 const router = express.Router();
 
-// Create a new comment
+// Create a new comment (supports optional image upload)
 router.post(
-  "/",  
-  auth(USER_ROLE.USER,USER_ROLE.ADMIN),
+  "/",
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  uploadImage.single("file"),
+  parseBody,
   validateRequest(createCommentValidationSchema),
   CommentController.createComment
 );
@@ -26,12 +30,14 @@ router.get(
 );
 
 // Get all comments
-router.get("/", auth(USER_ROLE.ADMIN), CommentController.getAllComments);
+router.get("/", auth(USER_ROLE.ADMIN, USER_ROLE.USER), CommentController.getAllComments);
 
-// Update a comment by ID
+// Update a comment by ID (supports image replace / remove)
 router.patch(
   "/:commentId",
-  auth( USER_ROLE.USER),
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  uploadImage.single("file"),
+  parseBody,
   validateRequest(updateCommentValidationSchema),
   CommentController.updateCommentById
 );
@@ -42,8 +48,5 @@ router.delete(
   auth(USER_ROLE.ADMIN, USER_ROLE.USER),
   CommentController.deleteCommentById
 );
-
-
-
 
 export const commentRoutes = router;

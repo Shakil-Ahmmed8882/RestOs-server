@@ -11,6 +11,13 @@ import createAnalyticsRecord from "../analytics/analytics.service";
 import validateBlogExistence from "../../helper/validateBlogExistance";
 import validateUserAndStatus from "../../helper/validateUserStatus";
 
+const USER_SAFE_FIELDS = "_id name email photo role status";
+
+const populateComment = (commentId: mongoose.Types.ObjectId | string) =>
+  Comment.findById(commentId)
+    .populate({ path: "user", select: USER_SAFE_FIELDS })
+    .populate({ path: "replies.user", select: USER_SAFE_FIELDS });
+
 // ================= add reply ===================
 const addReplyToComment = async (
   commentId: string,
@@ -50,7 +57,7 @@ const addReplyToComment = async (
 
     comment.replies.push(reply);
     // Save the updated comment with the new reply
-    const updatedComment = await comment.save({ session });
+    await comment.save({ session });
 
     const blog = await validateBlogExistence(payload.blogId);
 
@@ -68,7 +75,7 @@ const addReplyToComment = async (
     );
 
     await session.commitTransaction();
-    return updatedComment;
+    return await populateComment(comment._id);
   } catch (error: any) {
     await session.abortTransaction();
     console.error("Transaction aborted:", error.message);
@@ -115,7 +122,7 @@ const updateReply = async (
 
     // Update the reply text
     reply.comment = payload.replyText;
-    const updatedComment = await comment.save({ session });
+    await comment.save({ session });
 
     await createAnalyticsRecord(
       {
@@ -130,7 +137,7 @@ const updateReply = async (
     );
 
     await session.commitTransaction();
-    return updatedComment;
+    return await populateComment(comment._id);
   } catch (error: any) {
     await session.abortTransaction();
     throw error;
@@ -172,11 +179,10 @@ const deleteReply = async (
 
     // Remove the reply from the replies array using pull()
     comment.replies.pull(replyId);
-    const updatedComment = await comment.save({ session });
-    // Create analytics record for updating a vote
+    await comment.save({ session });
 
     await session.commitTransaction();
-    return updatedComment;
+    return await populateComment(comment._id);
   } catch (error: any) {
     await session.abortTransaction();
     throw error;

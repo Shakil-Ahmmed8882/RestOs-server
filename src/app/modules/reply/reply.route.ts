@@ -20,7 +20,7 @@ router.post(
 // Update a reply to a comment by reply ID
 router.patch(
     "/comments/:commentId/reply/:replyId",
-    auth(USER_ROLE.USER),
+    auth(USER_ROLE.USER, USER_ROLE.ADMIN),
     validateRequest(replyCommentValidationSchema),
     replyControllers.handleUpdateReply
   );
