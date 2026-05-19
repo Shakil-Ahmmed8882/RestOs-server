@@ -68,11 +68,9 @@ const handleDeleteOrder = catchAsync(async (req, res) => {
   });
 });
 
-// Add this function to your existing order.controller.ts file
 const handleGetOrderSummaryOfSingleUser = catchAsync(async (req, res) => {
-  const { userId } = req.params; 
+  const { userId } = req.params;
 
-  // Call the service method to get the order summary
   const summary = await OrderServiices.getOrderSummaryOfSingleUser(userId);
 
   sendResponse(res, {
@@ -83,13 +81,71 @@ const handleGetOrderSummaryOfSingleUser = catchAsync(async (req, res) => {
   });
 });
 
+// "Me" endpoints — userId resolved from the JWT instead of the URL.
+const resolveSelfId = (req: any): string => {
+  return req.user?.userId || req.user?._id;
+};
 
+const handleGetMyOrders = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const result = await OrderServiices.getUserOrders(userId, req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your orders retrieved successfully",
+    meta: result.meta,
+    data: result.result,
+  });
+});
+
+const handleGetMySummary = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const summary = await OrderServiices.getOrderSummaryOfSingleUser(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your order summary retrieved successfully",
+    data: summary,
+  });
+});
+
+const handleCancelMyPending = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const result = await OrderServiices.cancelUserPendingOrders(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Cancelled ${result.cancelled} pending orders`,
+    data: result,
+  });
+});
+
+// Admin / generic version of getUserOrders by explicit userId param
+const handleGetUserOrders = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const result = await OrderServiices.getUserOrders(userId, req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User orders retrieved successfully",
+    meta: result.meta,
+    data: result.result,
+  });
+});
 
 export const orderControllers = {
   handleCreateOrder,
   handleGetSingleOrder,
   handleGetAllOrders,
   handleDeleteOrder,
- handleGetOrderSummaryOfSingleUser,
- handleUpdateOrder
+  handleGetOrderSummaryOfSingleUser,
+  handleUpdateOrder,
+  handleGetMyOrders,
+  handleGetMySummary,
+  handleCancelMyPending,
+  handleGetUserOrders,
 };
