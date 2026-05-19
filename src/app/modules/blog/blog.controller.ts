@@ -71,10 +71,43 @@ const handleDeleteBlogById = catchAsync(async (req, res) => {
   });
 });
 
+const resolveSelfId = (req: any): string => {
+  return req.user?.userId || req.user?._id;
+};
+
+// My blogs — author resolved from JWT
+const handleGetMyBlogs = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const data = await blogServices.getMyBlogs(userId, req.query as Record<string, unknown>);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your blogs retrieved successfully",
+    meta: data.meta,
+    data: data.result,
+  });
+});
+
+// My blog stats — per-status counts + engagement totals + 5 recent
+const handleGetMyBlogsStats = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const data = await blogServices.getMyBlogsStats(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your blog stats retrieved successfully",
+    data,
+  });
+});
+
 export const blogControllers = {
   handleCreateBlog,
   handleGetAllBlogs,
   handleGetBlogById,
   handleUpdateBlogById,
   handleDeleteBlogById,
+  handleGetMyBlogs,
+  handleGetMyBlogsStats,
 };
