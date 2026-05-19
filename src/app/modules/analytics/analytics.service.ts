@@ -9,7 +9,10 @@ import OrderModel from "../order/order.model";
 import PaymentModel from "../payment/payment.model";
 
 // Utility function to create an analytics record
-const createAnalyticsRecord = async (payload: IAnalytics, session: any) => {
+const createAnalyticsRecord = async (
+  payload: IAnalytics,
+  session?: any
+) => {
   try {
     const analyticsData = {
       ...payload,
@@ -17,8 +20,11 @@ const createAnalyticsRecord = async (payload: IAnalytics, session: any) => {
       timestamp: new Date(),
     };
 
-    // Save the analytics record to the database
-   return await Analytics.create([analyticsData], { session });
+    // Session is optional — serverless paths skip transactions because they
+    // are flaky on cold-start replica-set connections.
+    return session
+      ? await Analytics.create([analyticsData], { session })
+      : await Analytics.create([analyticsData]);
   } catch (error: any) {
     console.error("Error creating analytics record:", error.message);
     throw error;
