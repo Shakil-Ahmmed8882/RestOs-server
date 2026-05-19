@@ -1,39 +1,24 @@
-import { Router } from 'express';
-import { saveControllers } from './save.controller';
-import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../../constants';
-
+import { Router } from "express";
+import { saveControllers } from "./save.controller";
+import auth from "../../middlewares/auth";
+import { USER_ROLE } from "../../constants";
 
 const router = Router();
+const userAuth = auth(USER_ROLE.USER, USER_ROLE.ADMIN);
 
-// Save a blog post for a user
-router.post(
-  '/:blogId/save',
-  auth(USER_ROLE.USER,USER_ROLE.ADMIN),                 
-  saveControllers.saveBlog
-);
+// List my saves (paginated). Optional ?type=blog|food filter for tabs.
+router.get("/", userAuth, saveControllers.handleGetMySaves);
 
+// Per-type counts for the Blogs/Foods tab badges.
+router.get("/counts", userAuth, saveControllers.handleGetMySavesCounts);
 
-// Get all saved blogs for a user
+// Save / unsave / check — generic over { type, itemId }.
+router.post("/:type/:itemId", userAuth, saveControllers.handleSaveItem);
+router.delete("/:type/:itemId", userAuth, saveControllers.handleUnsaveItem);
 router.get(
-  '/',
-  auth(USER_ROLE.USER),                 
-  saveControllers.getUserSavedBlogs
-);
-
-// Check if a blog is saved by a user
-router.get(
-  '/:blogId/is-saved',
-  auth(USER_ROLE.ADMIN,USER_ROLE.USER),
-  saveControllers.isBlogSavedByUser
-);
-
-
-// Unsave a blog post for a user
-router.delete(
-  '/:blogId/unsave',
-  auth(USER_ROLE.USER),               
-  saveControllers.unsaveBlog
+  "/:type/:itemId/is-saved",
+  userAuth,
+  saveControllers.handleIsItemSaved
 );
 
 export const saveRoutes = router;
