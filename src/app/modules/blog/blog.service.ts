@@ -108,10 +108,109 @@ const deleteBlogById = async (id: string) => {
   return deleted;
 };
 
+/**
+ * Paginated, filterable, searchable list of one user's own blogs. Filters
+ * out soft-deleted blogs by default. Supports searchTerm, status filter,
+ * sort, page, limit, fields via QueryBuilder.
+ */
+const getMyBlogs = async (
+  userId: string,
+  query: Record<string, unknown>
+) => {
+  const baseFilter: Record<string, unknown> = {
+    "author.user": new mongoose.Types.ObjectId(userId),
+    isDeleted: { $ne: true },
+  };
+
+  // Let the caller opt-in to soft-deleted blogs (e.g. a "Trash" tab)
+  if (query.includeDeleted === "true") {
+    delete baseFilter.isDeleted;
+    delete query.includeDeleted;
+  }
+
+  const blogQuery = new QueryBuilder(BlogModel.find(baseFilter), query)
+    .search(searchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const meta = await blogQuery.countTotal();
+  const result = await blogQuery.modelQuery;
+  return { meta, result };
+};
+
+/**
+ * Per-status counts + lifetime engagement totals for one user's blogs.
+ * Drives the tab badges (Pending/Approved/Test-approved) and the
+ * "Blogger stats" dashboard card.
+ */
+const getMyBlogsStats = async (userId: string) => {
+  const uid = new mongoose.Types.ObjectId(userId);
+
+  const [rows, latest] = await Promise.all([
+    BlogModel.aggregate([
+      { $match: { "author.user": uid, isDeleted: { $ne: true } } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          upvotes: { $sum: "$upvotes" },
+          downvotes: { $sum: "$downvotes" },
+          commentsReceived: { $sum: "$commentsCount" },
+        },
+      },
+    ]),
+    BlogModel.find(
+      { "author.user": uid, isDeleted: { $ne: true } },
+      { title: 1, status: 1, upvotes: 1, downvotes: 1, commentsCount: 1, image: 1, createdAt: 1 }
+    )
+      .sort({ createdAt: -1 })
+      .limit(5),
+  ]);
+
+  const empty = { count: 0, upvotes: 0, downvotes: 0, commentsReceived: 0 };
+  const byStatus: Record<string, typeof empty> = {
+    pending: { ...empty },
+    approved: { ...empty },
+    "test-approved": { ...empty },
+  };
+  for (const r of rows) {
+    if (r._id && byStatus[r._id]) {
+      byStatus[r._id] = {
+        count: r.count,
+        upvotes: r.upvotes ?? 0,
+        downvotes: r.downvotes ?? 0,
+        commentsReceived: r.commentsReceived ?? 0,
+      };
+    }
+  }
+
+  const totalBlogs = rows.reduce((a, r) => a + r.count, 0);
+  const totalUpvotes = rows.reduce((a, r) => a + (r.upvotes ?? 0), 0);
+  const totalDownvotes = rows.reduce((a, r) => a + (r.downvotes ?? 0), 0);
+  const totalCommentsReceived = rows.reduce(
+    (a, r) => a + (r.commentsReceived ?? 0),
+    0
+  );
+
+  return {
+    totalBlogs,
+    totalUpvotes,
+    totalDownvotes,
+    totalCommentsReceived,
+    netVotes: totalUpvotes - totalDownvotes,
+    byStatus,
+    recent: latest,
+  };
+};
+
 export const blogServices = {
   createBlog,
   getAllBlogs,
   getBlogById,
   updateBlogById,
   deleteBlogById,
+  getMyBlogs,
+  getMyBlogsStats,
 };
