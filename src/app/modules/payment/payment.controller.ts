@@ -66,10 +66,12 @@ export const paymentControllers = {
     }
   },
 
-  // Payment success callback from SSL Commerz
+  // Payment success callback from SSL Commerz (POST in production, GET for manual tests)
   async handlePaymentSuccess(req: Request, res: Response) {
+    const client = process.env.CLIENT_URL || "http://localhost:3000";
     try {
-      const { tran_id, val_id, amount, currency, status } = req.query;
+      const src = { ...(req.query as any), ...(req.body as any) };
+      const { tran_id, val_id, status } = src;
 
       if (status === "VALID" || status === "VALIDATED") {
         await paymentService.verifyPayment(
@@ -78,45 +80,49 @@ export const paymentControllers = {
         );
 
         res.redirect(
-          `${process.env.CLIENT_URL}/payment-success?transactionId=${tran_id}`
+          `${client}/payment-success?transactionId=${tran_id}`
         );
       } else {
         res.redirect(
-          `${process.env.CLIENT_URL}/payment-failed?transactionId=${tran_id}`
+          `${client}/payment-failed?transactionId=${tran_id}`
         );
       }
     } catch (error: any) {
-      res.redirect(`${process.env.CLIENT_URL}/payment-failed`);
+      res.redirect(`${client}/payment-failed`);
     }
   },
 
   // Payment failure callback from SSL Commerz
   async handlePaymentFail(req: Request, res: Response) {
+    const client = process.env.CLIENT_URL || "http://localhost:3000";
     try {
-      const { tran_id } = req.query;
+      const src = { ...(req.query as any), ...(req.body as any) };
+      const { tran_id } = src;
 
       await paymentService.handlePaymentFailure(tran_id as string);
 
       res.redirect(
-        `${process.env.CLIENT_URL}/payment-failed?transactionId=${tran_id}`
+        `${client}/payment-failed?transactionId=${tran_id}`
       );
     } catch (error: any) {
-      res.redirect(`${process.env.CLIENT_URL}/payment-failed`);
+      res.redirect(`${client}/payment-failed`);
     }
   },
 
   // Payment cancellation callback from SSL Commerz
   async handlePaymentCancel(req: Request, res: Response) {
+    const client = process.env.CLIENT_URL || "http://localhost:3000";
     try {
-      const { tran_id } = req.query;
+      const src = { ...(req.query as any), ...(req.body as any) };
+      const { tran_id } = src;
 
       await paymentService.handlePaymentCancellation(tran_id as string);
 
       res.redirect(
-        `${process.env.CLIENT_URL}/payment-cancelled?transactionId=${tran_id}`
+        `${client}/payment-cancelled?transactionId=${tran_id}`
       );
     } catch (error: any) {
-      res.redirect(`${process.env.CLIENT_URL}/payment-cancelled`);
+      res.redirect(`${client}/payment-cancelled`);
     }
   },
 
