@@ -1,78 +1,94 @@
 import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import AppError from "../../errors/AppError";
 import { saveServices } from "./save.service";
+import { TSaveType } from "./save.interface";
 
-/**
- * Save a blog post
- */
-const saveBlog = catchAsync(async (req, res) => {
-  const { blogId } = req.params;
-  const userId = req.user.userId;
+const resolveSelfId = (req: any): string => req.user?.userId || req.user?._id;
 
-  const result = await saveServices.saveBlog(userId, blogId);
+const assertType = (raw: string): TSaveType => {
+  if (raw === "blog" || raw === "food") return raw;
+  throw new AppError(
+    httpStatus.BAD_REQUEST,
+    `Invalid save type "${raw}". Must be one of: blog, food.`
+  );
+};
+
+const handleSaveItem = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const type = assertType(req.params.type);
+  const { itemId } = req.params;
+
+  const result = await saveServices.saveItem(userId, type, itemId);
 
   sendResponse(res, {
-    statusCode: httpStatus.OK,
+    statusCode: httpStatus.CREATED,
     success: true,
-    message: "Blog post saved successfully",
+    message: `${type} saved successfully`,
     data: result,
   });
 });
 
-/**
- * Unsave a blog post
- */
-const unsaveBlog = catchAsync(async (req, res) => {
-  const { blogId } = req.params;
-  const userId = req.user.userId;
+const handleUnsaveItem = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const type = assertType(req.params.type);
+  const { itemId } = req.params;
 
-  const result = await saveServices.unsaveBlog(userId, blogId);
+  const result = await saveServices.unsaveItem(userId, type, itemId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Blog post unsaved successfully",
+    message: `${type} unsaved successfully`,
     data: result,
   });
 });
 
-/**
- * Get all saved blog posts for a user
- */
-const getUserSavedBlogs = catchAsync(async (req, res) => {
-  const userId = req.user.userId;
-  const result = await saveServices.getUserSavedBlogs(userId,req.query);
+const handleIsItemSaved = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const type = assertType(req.params.type);
+  const { itemId } = req.params;
+
+  const isSaved = await saveServices.isItemSaved(userId, type, itemId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Retrieved all saved blog posts successfully",
+    message: "Checked if item is saved",
+    data: { isSaved, type, itemId },
+  });
+});
+
+const handleGetMySaves = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const result = await saveServices.getMySaves(userId, req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Saved items retrieved successfully",
     meta: result.meta,
     data: result.data,
   });
 });
 
-/**
- * Check if a specific blog post is saved by the user
- */
-const isBlogSavedByUser = catchAsync(async (req, res) => {
-  const { blogId } = req.params;
-  const userId = req.user.userId;
-
-  const isSaved = await saveServices.isBlogSavedByUser(userId, blogId);
+const handleGetMySavesCounts = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  const data = await saveServices.getMySavesCounts(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Checked if blog post is saved by user",
-    data: { isSaved },
+    message: "Saved counts retrieved successfully",
+    data,
   });
 });
 
 export const saveControllers = {
-  saveBlog,
-  unsaveBlog,
-  getUserSavedBlogs,
-  isBlogSavedByUser,
+  handleSaveItem,
+  handleUnsaveItem,
+  handleIsItemSaved,
+  handleGetMySaves,
+  handleGetMySavesCounts,
 };
