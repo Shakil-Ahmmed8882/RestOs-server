@@ -84,62 +84,68 @@ export const paymentControllers = {
 
   // Payment success callback from SSL Commerz (POST in production, GET for manual tests)
   async handlePaymentSuccess(req: Request, res: Response) {
-    const successUrl = buildRedirect(
-      "CLIENT_SUCCESS_URL",
-      "/payments/success"
-    );
-    const failUrl = buildRedirect(
-      "CLIENT_FAILED_URL",
-      "/payments/error?variant=failed"
-    );
+    // HARDCODED for debugging — confirm redirect logic works, then revert to env vars
+    const successUrl = "http://localhost:3000/payments/success";
+    const failUrl = "http://localhost:3000/payments/error?variant=failed";
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id, val_id, status } = src;
+
+      console.log("[payment/success] hit", { method: req.method, status, tran_id });
 
       if (status === "VALID" || status === "VALIDATED") {
         await paymentService.verifyPayment(
           tran_id as string,
           val_id as string
         );
-        res.redirect(withTxn(successUrl, tran_id));
+        const target = withTxn(successUrl, tran_id);
+        console.log("[payment/success] redirecting to", target);
+        res.redirect(target);
       } else {
-        res.redirect(withTxn(failUrl, tran_id));
+        const target = withTxn(failUrl, tran_id);
+        console.log("[payment/success] non-VALID, redirecting to", target);
+        res.redirect(target);
       }
     } catch (error: any) {
+      console.log("[payment/success] error, redirecting to fail:", error?.message);
       res.redirect(failUrl);
     }
   },
 
   // Payment failure callback from SSL Commerz
   async handlePaymentFail(req: Request, res: Response) {
-    const failUrl = buildRedirect(
-      "CLIENT_FAILED_URL",
-      "/payments/error?variant=failed"
-    );
+    const failUrl = "http://localhost:3000/payments/error?variant=failed";
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id } = src;
 
+      console.log("[payment/fail] hit", { method: req.method, tran_id });
+
       await paymentService.handlePaymentFailure(tran_id as string);
-      res.redirect(withTxn(failUrl, tran_id));
+      const target = withTxn(failUrl, tran_id);
+      console.log("[payment/fail] redirecting to", target);
+      res.redirect(target);
     } catch (error: any) {
+      console.log("[payment/fail] error:", error?.message);
       res.redirect(failUrl);
     }
   },
 
   // Payment cancellation callback from SSL Commerz
   async handlePaymentCancel(req: Request, res: Response) {
-    const cancelUrl = buildRedirect(
-      "CLIENT_CANCELLED_URL",
-      "/payments/error?variant=cancelled"
-    );
+    const cancelUrl = "http://localhost:3000/payments/error?variant=cancelled";
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id } = src;
 
+      console.log("[payment/cancel] hit", { method: req.method, tran_id });
+
       await paymentService.handlePaymentCancellation(tran_id as string);
-      res.redirect(withTxn(cancelUrl, tran_id));
+      const target = withTxn(cancelUrl, tran_id);
+      console.log("[payment/cancel] redirecting to", target);
+      res.redirect(target);
     } catch (error: any) {
+      console.log("[payment/cancel] error:", error?.message);
       res.redirect(cancelUrl);
     }
   },
