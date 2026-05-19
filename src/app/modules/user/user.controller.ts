@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { userServices } from "./user.service";
+import { userAnalyticsService } from "./user.analytics.service";
 import AppError from "../../errors/AppError";
 
 const handleCreateUser = catchAsync(async (req, res) => {
@@ -89,6 +90,45 @@ const handleUpdateUserRoleAndStatus = catchAsync(async (req, res) => {
   });
 });
 
+const resolveSelfId = (req: any): string => {
+  return req.user?.userId || req.user?._id;
+};
+
+const parseDays = (raw: unknown): number => {
+  const n = parseInt(String(raw ?? ""), 10);
+  if (!n || Number.isNaN(n)) return 30;
+  return Math.min(Math.max(n, 7), 365);
+};
+
+const handleGetMyAnalytics = catchAsync(async (req, res) => {
+  const userId = resolveSelfId(req);
+  if (!userId) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Not authenticated");
+  }
+  const days = parseDays(req.query.days);
+  const data = await userAnalyticsService.getForUser(userId, days);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your analytics retrieved successfully",
+    data,
+  });
+});
+
+const handleGetUserAnalytics = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const days = parseDays(req.query.days);
+  const data = await userAnalyticsService.getForUser(userId, days);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User analytics retrieved successfully",
+    data,
+  });
+});
+
 export const userControllers = {
   handleCreateUser,
   handleGetAllUsers,
@@ -96,4 +136,6 @@ export const userControllers = {
   handleUpdateUser,
   handleDeleteUser,
   handleUpdateUserRoleAndStatus,
+  handleGetMyAnalytics,
+  handleGetUserAnalytics,
 };
