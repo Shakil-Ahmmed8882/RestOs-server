@@ -96,16 +96,27 @@ Response (200):
 
 Auth: **required** (`USER_ROLE.USER`). Send `Authorization: Bearer <token>`.
 
-**Payment is per-order, not per-cart.** If the user placed an order containing 2 items → 2 Order docs → you must decide:
+**The endpoint accepts one OR many orders in a single SSLCommerz session.** This is the right call for a cart that produced 3 orders — the user pays the *combined* total once, the gateway opens once, and on success all linked orders are confirmed atomically.
 
-- **Recommended for v1:** call `POST /orders/create-order` once with the whole cart, then pick **one orderId** (e.g. the first returned) and pay for it. Loop the rest, or aggregate them server-side later. The simplest UX is to pay each order separately and show a step indicator.
-- A future server change can merge cart items into a single parent `Order` — note that as a TODO and don't try to patch around it in the frontend.
-
-Request body:
+Request body — pick one shape:
 
 ```json
+// Single order
 { "orderId": "66f3a1b2c3d4e5f6a7b8c9d0" }
 ```
+
+```json
+// Multiple orders from one cart (preferred when cart had >1 item)
+{
+  "orderIds": [
+    "66f3a1b2c3d4e5f6a7b8c9d0",
+    "66f3a1b2c3d4e5f6a7b8c9d1",
+    "66f3a1b2c3d4e5f6a7b8c9d2"
+  ]
+}
+```
+
+If you send both, `orderIds` wins. All orders must belong to the authenticated user — the server enforces this and 400s otherwise.
 
 Response (200):
 
@@ -116,11 +127,15 @@ Response (200):
   "data": {
     "success": true,
     "paymentUrl": "https://sandbox.sslcommerz.com/gwprocess/v4/gw.php?Q3...",
-    "transactionId": "TXN-66f3a1b2c3d4e5f6a7b8c9d0-9e1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c",
-    "sessionkey": "....."
+    "transactionId": "TXN-<firstOrderId>-<uuid>",
+    "sessionkey": "...",
+    "orderIds": ["66f3...d0", "66f3...d1", "66f3...d2"],
+    "totalAmount": 1500
   }
 }
 ```
+
+`totalAmount` is the **sum** of `order.totalPrice` for every order in `orderIds` — the gateway charges this single amount, and on success the server flips **all** of them to `status: "confirmed"` and `paymentStatus: "completed"` in one update.
 
 **What to do with the response:**
 1. Persist `transactionId` in client state (or `sessionStorage`) keyed by order — you will match it on the success page.
@@ -246,7 +261,7 @@ Deliverables:
 **Mission:** wire `POST /payments/initiate`, `GET /payments/history`, `GET /payments/:paymentId`, and build the 3 callback pages.
 
 Deliverables:
-1. `initiatePayment(orderId): Promise<{ paymentUrl, transactionId }>`.
+1. `initiatePayment({ orderIds }): Promise<{ paymentUrl, transactionId, orderIds, totalAmount }>` — accepts either `{ orderId }` or `{ orderIds: string[] }`.
 2. `useInitiatePayment()` — on success, **`window.location.href = data.paymentUrl`**. Do not return to the caller, do not show a toast, do not optimistic-anything. The browser is leaving.
 3. `usePaymentHistory({ page, limit })` — `useInfiniteQuery` keyed on `["payments", "history", { page, limit }]`.
 4. Routes:
@@ -328,23 +343,20 @@ export function usePlaceOrderAndPay() {
       })),
     };
 
-    // 2. Place the order
+    // 2. Place the orders (one POST, N Order docs back)
     const orders = await createOrder.mutateAsync(payload);
     if (orders.length === 0) throw new Error("No items could be ordered");
 
-    // 3. (v1) Pay for the first order. Persist the rest as "awaiting payment".
-    const primary = orders[0];
-    sessionStorage.setItem("pendingOrderId", primary._id);
-    sessionStorage.setItem(
-      "pendingOrderIds",
-      JSON.stringify(orders.map(o => o._id))
-    );
+    const orderIds = orders.map(o => o._id);
+    sessionStorage.setItem("pendingOrderIds", JSON.stringify(orderIds));
 
-    // 4. Kick off SSLCommerz
-    const { paymentUrl, transactionId } = await initiatePay.mutateAsync(primary._id);
+    // 3. ONE SSLCommerz session for the whole cart (sums totals server-side)
+    const { paymentUrl, transactionId, totalAmount } =
+      await initiatePay.mutateAsync({ orderIds });
     sessionStorage.setItem("pendingTxnId", transactionId);
+    sessionStorage.setItem("pendingTotal", String(totalAmount));
 
-    // 5. Hand control to the gateway — do NOT clear cart here
+    // 4. Hand control to the gateway — do NOT clear cart here
     window.location.href = paymentUrl;
   };
 }
@@ -407,10 +419,13 @@ useEffect(() => {
 
 | Gap | Impact | Suggested fix on backend |
 | --- | --- | --- |
-| `verifyPayment` updates `order.status="confirmed"` but never touches `order.paymentStatus`. | The order's `paymentStatus` field stays `"pending"` even after success. | In `payment.service.ts` `verifyPayment`, also `$set: { paymentStatus: "completed" }`. |
-| One Order doc per cart item → paying for a multi-item cart needs N payments. | UX friction. | Introduce a parent `Order` with `items[]`, or aggregate `totalPrice` per cart and pay once. |
 | `POST /orders/create-order` silently skips duplicates and out-of-stock items. | User sees "success" but ordered fewer items than they thought. | Return a `skipped[]` array in the response so the frontend can surface it. |
 | Order routes are not auth-protected (only `PATCH /orders/:id` is admin-gated). | Anyone with the user `_id` can create orders for that user. | Add `auth(USER_ROLE.USER)` to `POST /orders/create-order` and read `user` from `req.user`, not the body. |
+
+**Resolved (already fixed in the backend):**
+- ✅ `verifyPayment` now also sets `order.paymentStatus = "completed"`.
+- ✅ Multi-item carts pay through a single SSLCommerz session via `orderIds[]` — no more N separate payments.
+- ✅ `req.user.userId` vs `req.user._id` mismatch in the payment controller is fixed.
 
 When you spot these in the frontend, **do not** try to silently correct them — instead, log a console warning ("Backend gap: paymentStatus not synced") so we can prioritise the fix server-side.
 
@@ -421,7 +436,7 @@ When you spot these in the frontend, **do not** try to silently correct them —
 | # | Method | URL | Auth | Body / Query | Used for |
 |---|--------|-----|------|--------------|----------|
 | 1 | POST   | `/api/v1/orders/create-order` | (token) | `{ cartItems: [...] }` | Place order from cart |
-| 2 | POST   | `/api/v1/payments/initiate` | USER | `{ orderId }` | Get SSLCommerz `paymentUrl` |
+| 2 | POST   | `/api/v1/payments/initiate` | USER | `{ orderId }` or `{ orderIds: [] }` | Get SSLCommerz `paymentUrl` (1 session for whole cart) |
 | 3 | (browser redirect) | `data.paymentUrl` | — | — | Hand off to gateway |
 | 4 | (SSLCommerz → server) | `/api/v1/payments/success` etc. | — | — | Server verifies & redirects back |
 | 5 | GET    | `/api/v1/payments/history?page=&limit=` | USER | — | Purchased list |
