@@ -1,6 +1,22 @@
 import { Request, Response } from "express";
 import { paymentService } from "./payment.service";
 
+// Resolve a callback redirect target. Prefer the dedicated env var; fall back
+// to CLIENT_URL + path, then to localhost for dev.
+function buildRedirect(envKey: string, fallbackPath: string): string {
+  const direct = process.env[envKey];
+  if (direct) return direct;
+  const base = process.env.CLIENT_URL || "http://localhost:3000";
+  return `${base}${fallbackPath}`;
+}
+
+// Append transactionId to a URL, honoring whether it already has a query string.
+function withTxn(url: string, tranId: unknown): string {
+  if (!tranId) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}transactionId=${encodeURIComponent(String(tranId))}`;
+}
+
 export const paymentControllers = {
   // Initiate payment
   async handleInitiatePayment(req: Request, res: Response) {
@@ -68,7 +84,14 @@ export const paymentControllers = {
 
   // Payment success callback from SSL Commerz (POST in production, GET for manual tests)
   async handlePaymentSuccess(req: Request, res: Response) {
-    const client = process.env.CLIENT_URL || "http://localhost:3000";
+    const successUrl = buildRedirect(
+      "CLIENT_SUCCESS_URL",
+      "/payments/success"
+    );
+    const failUrl = buildRedirect(
+      "CLIENT_FAILED_URL",
+      "/payments/error?variant=failed"
+    );
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id, val_id, status } = src;
@@ -78,51 +101,46 @@ export const paymentControllers = {
           tran_id as string,
           val_id as string
         );
-
-        res.redirect(
-          `${client}/payment-success?transactionId=${tran_id}`
-        );
+        res.redirect(withTxn(successUrl, tran_id));
       } else {
-        res.redirect(
-          `${client}/payment-failed?transactionId=${tran_id}`
-        );
+        res.redirect(withTxn(failUrl, tran_id));
       }
     } catch (error: any) {
-      res.redirect(`${client}/payment-failed`);
+      res.redirect(failUrl);
     }
   },
 
   // Payment failure callback from SSL Commerz
   async handlePaymentFail(req: Request, res: Response) {
-    const client = process.env.CLIENT_URL || "http://localhost:3000";
+    const failUrl = buildRedirect(
+      "CLIENT_FAILED_URL",
+      "/payments/error?variant=failed"
+    );
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id } = src;
 
       await paymentService.handlePaymentFailure(tran_id as string);
-
-      res.redirect(
-        `${client}/payment-failed?transactionId=${tran_id}`
-      );
+      res.redirect(withTxn(failUrl, tran_id));
     } catch (error: any) {
-      res.redirect(`${client}/payment-failed`);
+      res.redirect(failUrl);
     }
   },
 
   // Payment cancellation callback from SSL Commerz
   async handlePaymentCancel(req: Request, res: Response) {
-    const client = process.env.CLIENT_URL || "http://localhost:3000";
+    const cancelUrl = buildRedirect(
+      "CLIENT_CANCELLED_URL",
+      "/payments/error?variant=cancelled"
+    );
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id } = src;
 
       await paymentService.handlePaymentCancellation(tran_id as string);
-
-      res.redirect(
-        `${client}/payment-cancelled?transactionId=${tran_id}`
-      );
+      res.redirect(withTxn(cancelUrl, tran_id));
     } catch (error: any) {
-      res.redirect(`${client}/payment-cancelled`);
+      res.redirect(cancelUrl);
     }
   },
 
