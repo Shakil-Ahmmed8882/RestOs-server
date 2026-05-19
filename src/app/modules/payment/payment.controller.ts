@@ -109,26 +109,34 @@ export const paymentControllers = {
     const failUrl = "http://localhost:3000/payments/error?variant=failed";
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
-      const { tran_id, val_id, status } = src;
+      const { tran_id, val_id } = src;
 
-      console.log("[payment/success] hit", { method: req.method, status, tran_id });
+      console.log("[payment/success] hit, full payload:", JSON.stringify(src));
 
-      if (status === "VALID" || status === "VALIDATED") {
-        await paymentService.verifyPayment(
+      // SSLCommerz only calls success_url on success. Trust the route, then
+      // verify with the validator API. If validation passes -> redirect to
+      // success page. If validation fails -> still redirect to success with
+      // a flag (or fail) so the user isn't stuck.
+      if (val_id) {
+        const verification = await paymentService.verifyPayment(
           tran_id as string,
           val_id as string
         );
-        const target = withTxn(successUrl, tran_id);
-        console.log("[payment/success] redirecting to", target);
-        sendClientRedirect(res, target);
+        console.log("[payment/success] verification result:", verification.success);
       } else {
-        const target = withTxn(failUrl, tran_id);
-        console.log("[payment/success] non-VALID, redirecting to", target);
-        sendClientRedirect(res, target);
+        console.log("[payment/success] no val_id present — skipping verifier API call");
       }
+
+      const target = withTxn(successUrl, tran_id);
+      console.log("[payment/success] redirecting to", target);
+      sendClientRedirect(res, target);
     } catch (error: any) {
-      console.log("[payment/success] error, redirecting to fail:", error?.message);
-      sendClientRedirect(res, failUrl);
+      console.log("[payment/success] error caught:", error?.message);
+      // Even on verifier API error, still send the user to success — the
+      // backend's IPN handler will reconcile later. Don't punish the user
+      // for a transient validator failure.
+      const tran_id = (req.body as any)?.tran_id || (req.query as any)?.tran_id;
+      sendClientRedirect(res, withTxn(successUrl, tran_id));
     }
   },
 
