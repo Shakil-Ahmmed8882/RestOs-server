@@ -172,6 +172,23 @@ export const paymentService = {
         { $set: { status: "confirmed", paymentStatus: "completed" } }
       );
 
+      // Cancel every OTHER pending order for this user. The user is done with
+      // checkout — any leftover pending rows are stale (duplicates from the
+      // user re-adding the same item to cart). Keep them in the DB as
+      // "canceled" so order history stays auditable.
+      const cancelResult = await OrdersModel.updateMany(
+        {
+          user: payment.userId,
+          status: "pending",
+          _id: { $nin: allOrderIds },
+        },
+        { $set: { status: "canceled", paymentStatus: "cancelled" } }
+      );
+      console.log(
+        "[verifyPayment] cancelled stale pending orders for user:",
+        cancelResult.modifiedCount
+      );
+
       return {
         success: true,
         message: "Payment verified successfully",
@@ -225,9 +242,22 @@ export const paymentService = {
       sslcommerzResponse: { mock: true, at: new Date().toISOString() },
     });
 
+    const paidIds = orders.map((o) => o._id);
+
     await OrdersModel.updateMany(
-      { _id: { $in: orders.map((o) => o._id) } },
+      { _id: { $in: paidIds } },
       { $set: { status: "confirmed", paymentStatus: "completed" } }
+    );
+
+    // Cancel every OTHER pending order for this user — same cleanup as real
+    // payment so the pending list isn't left with stale rows.
+    const cancelResult = await OrdersModel.updateMany(
+      {
+        user: userId,
+        status: "pending",
+        _id: { $nin: paidIds },
+      },
+      { $set: { status: "canceled", paymentStatus: "cancelled" } }
     );
 
     return {
@@ -235,8 +265,9 @@ export const paymentService = {
       message: "Mock payment completed",
       transactionId,
       totalAmount,
-      orderIds: orders.map((o) => o._id),
+      orderIds: paidIds,
       paymentId: payment._id,
+      cancelledStalePending: cancelResult.modifiedCount,
     };
   },
 
