@@ -27,35 +27,34 @@ const createComment = async (
   comment: IComment,
   file?: Express.Multer.File
 ) => {
-  const session = await mongoose.startSession();
-  let uploadedPublicIdForRollback: string | undefined;
-  try {
-    session.startTransaction();
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      throw new AppError(httpStatus.NOT_FOUND, "This User is not found");
-    }
+  // Validate first — fail fast WITHOUT touching Cloudinary if user/blog is bad.
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This User is not found");
+  }
+  if (user.status === USER_STATUS.BLOCKED) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "Can't comment as this user is already blocked"
+    );
+  }
 
-    if (user.status === USER_STATUS.BLOCKED) {
-      throw new AppError(
-        httpStatus.CONFLICT,
-        "Can't comment as this user is already blocked"
-      );
-    }
+  const blog = await BlogModel.findById(comment.blog);
+  if (!blog) {
+    throw new AppError(httpStatus.NOT_FOUND, " This blog is not found");
+  }
+  if (blog.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, " This blog is deleted");
+  }
 
-    const blog = await BlogModel.findById(comment.blog);
-
-    if (!blog) {
-      throw new AppError(httpStatus.NOT_FOUND, " This blog is not found");
-    }
-
-    if (blog.isDeleted) {
-      throw new AppError(httpStatus.NOT_FOUND, " This blog is deleted");
-    }
-
-    let image: string | null = null;
-    let imagePublicId: string | null = null;
-    if (file?.buffer) {
+  // Cloudinary upload happens BEFORE we open any DB write so a failed upload
+  // doesn't leave a half-written comment behind. Serverless-friendly:
+  // no mongo transaction (transactions are flaky on cold-start replica sets
+  // and can blow past Vercel's 10s/25s function timeout).
+  let image: string | null = null;
+  let imagePublicId: string | null = null;
+  if (file?.buffer) {
+    try {
       const uploaded = await uploadToCloudinary({
         fileBuffer: file.buffer,
         folder: "comments",
@@ -63,52 +62,54 @@ const createComment = async (
       });
       image = uploaded.url;
       imagePublicId = uploaded.public_id;
-      uploadedPublicIdForRollback = uploaded.public_id;
-    }
-
-    await BlogModel.findByIdAndUpdate(
-      comment.blog,
-      { $inc: { commentsCount: 1 } },
-      { session }
-    );
-    const commentResult = await Comment.create(
-      [
-        {
-          blog: comment.blog,
-          comment: comment.comment,
-          user: userId,
-          image,
-          imagePublicId,
-        },
-      ],
-      { session }
-    );
-
-    if (commentResult.length > 0) {
-      await createAnalyticsRecord(
-        {
-          userName: user?.name,
-          resourceName: blog.title,
-          description: `${user.name} commented on ${blog.title}`,
-          blog: commentResult[0]._id.toString(),
-          user: new Types.ObjectId(userId),
-          actionType: "comment",
-        },
-        session
+    } catch (err: any) {
+      console.error("Cloudinary upload failed for comment:", err?.message);
+      throw new AppError(
+        httpStatus.BAD_GATEWAY,
+        `Image upload failed: ${err?.message ?? "unknown"}`
       );
     }
+  }
 
-    await session.commitTransaction();
+  let createdId: Types.ObjectId | undefined;
+  try {
+    const commentResult = await Comment.create([
+      {
+        blog: comment.blog,
+        comment: comment.comment,
+        user: userId,
+        image,
+        imagePublicId,
+      },
+    ]);
+    createdId = commentResult[0]._id;
+
+    // Best-effort post-create work — never fail the comment if these wobble.
+    BlogModel.findByIdAndUpdate(comment.blog, { $inc: { commentsCount: 1 } })
+      .exec()
+      .catch((e) => console.error("commentsCount increment failed:", e?.message));
+
+    createAnalyticsRecord({
+      userName: user?.name,
+      resourceName: blog.title,
+      description: `${user.name} commented on ${blog.title}`,
+      blog: commentResult[0]._id.toString(),
+      user: new Types.ObjectId(userId),
+      actionType: "comment",
+    }).catch((e) => console.error("analytics record failed:", e?.message));
+
     return await populateComment(commentResult[0]._id);
   } catch (error: any) {
-    await session.abortTransaction();
-    if (uploadedPublicIdForRollback) {
-      await deleteFromCloudinary(uploadedPublicIdForRollback);
+    // Comment write failed AFTER the Cloudinary upload succeeded → clean up
+    // the orphaned image so we don't leak storage.
+    if (imagePublicId && !createdId) {
+      try {
+        await deleteFromCloudinary(imagePublicId);
+      } catch (e: any) {
+        console.error("orphan cloudinary cleanup failed:", e?.message);
+      }
     }
-    console.error("Transaction aborted:", error.message);
     throw error;
-  } finally {
-    session.endSession();
   }
 };
 
