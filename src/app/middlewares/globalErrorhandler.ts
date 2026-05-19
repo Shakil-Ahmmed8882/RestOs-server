@@ -1,5 +1,6 @@
 import { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
+import multer from 'multer';
 import config from '../config';
 import handleDuplicateError from '../errors/handleDuplicateError';
 import handleValidationError from '../errors/handleValidationError';
@@ -13,8 +14,36 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   let message = 'Something went wrong!';
   let errorSources: TErrorSources = [{ path: '', message: 'Something went wrong' }];
 
-  
-  
+  // Multer errors fire BEFORE the route handler, so the frontend sees these
+  // as 502 / opaque without this branch. Surface them as readable 400/413s.
+  if (err instanceof multer.MulterError) {
+    const friendly =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'File too large. Max upload size is 4 MB.'
+        : err.code === 'LIMIT_UNEXPECTED_FILE'
+          ? `Unexpected file field "${err.field}". Use the correct form field name.`
+          : err.code === 'LIMIT_FILE_COUNT'
+            ? 'Too many files in this request.'
+            : err.message || 'File upload failed.';
+
+    res.status(err.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({
+      success: false,
+      message: friendly,
+      errorSources: [{ path: err.field ?? '', message: friendly }],
+    });
+    return;
+  }
+
+  // Some image-validation errors are plain Error instances thrown by our
+  // multer fileFilter. They have "Unsupported file type:" in the message.
+  if (err instanceof Error && err.message?.startsWith('Unsupported file type:')) {
+    res.status(415).json({
+      success: false,
+      message: err.message,
+      errorSources: [{ path: 'file', message: err.message }],
+    });
+    return;
+  }
 
   if (err instanceof ZodError) {
     const simplifiedError = handleZodError(err);
