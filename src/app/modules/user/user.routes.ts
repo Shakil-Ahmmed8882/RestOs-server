@@ -18,6 +18,20 @@ router.post(
   userControllers.handleCreateUser
 );
 router.get("/", auth(USER_ROLE.USER, USER_ROLE.ADMIN), userControllers.handleGetAllUsers);
+
+// Analytics — "me" variant must be declared BEFORE /:userId so the literal
+// path wins over the parametric one.
+router.get(
+  "/me/analytics",
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  userControllers.handleGetMyAnalytics
+);
+router.get(
+  "/:userId/analytics",
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  userControllers.handleGetUserAnalytics
+);
+
 router.get("/:userId", auth(USER_ROLE.USER, USER_ROLE.ADMIN), userControllers.HandleGetSingleUser);
 
 router.patch(
