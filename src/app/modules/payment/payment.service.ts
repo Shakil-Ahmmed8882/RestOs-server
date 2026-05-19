@@ -1,8 +1,8 @@
 import axios from "axios";
+import qs from "querystring";
 import { randomUUID } from "crypto";
 import PaymentModel from "./payment.model";
 import OrdersModel from "../order/order.model";
-import { TPayment, TSSLCommerzPayload } from "./payment.interface";
 
 const SSLCOMMERZ_API = process.env.IS_LIVE === "true"
   ? "https://securepay.sslcommerz.com/gwprocess/v4/api.php"
@@ -13,51 +13,91 @@ const SSLCOMMERZ_VERIFY_API = process.env.IS_LIVE === "true"
   : "https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php";
 
 export const paymentService = {
-  // Initiate payment with SSL Commerz
-  async initiatePayment(orderId: string, userId: string) {
+  // Initiate payment with SSL Commerz (supports N orders in one transaction)
+  async initiatePayment(
+    input: { orderId?: string; orderIds?: string[] },
+    userId: string
+  ) {
     try {
-      // Get order details
-      const order = await OrdersModel.findById(orderId).populate("user food");
-      if (!order) {
-        throw new Error("Order not found");
+      const ids = input.orderIds?.length
+        ? input.orderIds
+        : input.orderId
+          ? [input.orderId]
+          : [];
+
+      if (ids.length === 0) {
+        throw new Error("Provide either orderId or orderIds[]");
       }
 
-      // Generate unique transaction ID
-      const transactionId = `TXN-${orderId}-${randomUUID()}`;
+      const orders = await OrdersModel.find({ _id: { $in: ids } })
+        .populate("user food");
 
-      // Create payment record
+      if (orders.length !== ids.length) {
+        throw new Error("One or more orders not found");
+      }
+
+      // All orders must belong to the same user (the caller).
+      const sameUser = orders.every(
+        (o) => String((o.user as any)?._id ?? o.user) === String(userId)
+      );
+      if (!sameUser) {
+        throw new Error("Orders do not belong to the authenticated user");
+      }
+
+      const storeId = process.env.STORE_ID;
+      const storePasswd = process.env.STORE_PASSWD;
+      if (!storeId || !storePasswd) {
+        throw new Error(
+          "SSLCommerz credentials missing — set STORE_ID and STORE_PASSWD in .env and fully restart the server"
+        );
+      }
+
+      const totalAmount = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+      const primary = orders[0];
+      const transactionId = `TXN-${primary._id}-${randomUUID()}`;
+
+      const productNames = orders
+        .map((o) => (o.food as any)?.name || "Food Item")
+        .slice(0, 5)
+        .join(", ");
+
       const payment = new PaymentModel({
-        orderId,
+        orderId: primary._id,
+        orderIds: orders.map((o) => o._id),
         userId,
-        amount: order.totalPrice,
+        amount: totalAmount,
         currency: "BDT",
         transactionId,
         status: "pending",
       });
-
       await payment.save();
 
-      // Prepare SSL Commerz payload
-      const payload: TSSLCommerzPayload = {
-        store_id: process.env.STORE_ID || "",
-        store_passwd: process.env.STORE_PASSWD || "",
-        total_amount: order.totalPrice,
+      const payload: Record<string, string | number> = {
+        store_id: storeId,
+        store_passwd: storePasswd,
+        total_amount: totalAmount,
         currency: "BDT",
         tran_id: transactionId,
         success_url: `${process.env.SERVER_URL}/api/v1/payments/success`,
         fail_url: `${process.env.SERVER_URL}/api/v1/payments/fail`,
         cancel_url: `${process.env.SERVER_URL}/api/v1/payments/cancel`,
         ipn_url: `${process.env.SERVER_URL}/api/v1/payments/ipn`,
-        cus_name: (order.user as any).name || "Customer",
-        cus_email: (order.user as any).email || "",
-        cus_phone: (order.user as any).phone || "",
-        product_name: (order.food as any).name || "Food Item",
+        cus_name: (primary.user as any).name || "Customer",
+        cus_email: (primary.user as any).email || "customer@example.com",
+        cus_phone: (primary.user as any).phone || "01700000000",
+        cus_add1: (primary.user as any).address || "Dhaka",
+        cus_city: (primary.user as any).city || "Dhaka",
+        cus_country: (primary.user as any).country || "Bangladesh",
+        shipping_method: "NO",
+        num_of_item: orders.length,
+        product_name: productNames || "Food Order",
         product_category: "food",
         product_profile: "general",
       };
 
-      // Call SSL Commerz API
-      const response = await axios.post(SSLCOMMERZ_API, payload);
+      const response = await axios.post(SSLCOMMERZ_API, qs.stringify(payload), {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
 
       if (response.data.status !== "SUCCESS") {
         throw new Error(response.data.failedreason || "Payment initiation failed");
@@ -68,6 +108,8 @@ export const paymentService = {
         paymentUrl: response.data.GatewayPageURL,
         transactionId,
         sessionkey: response.data.sessionkey,
+        orderIds: orders.map((o) => o._id),
+        totalAmount,
       };
     } catch (error: any) {
       throw new Error(`Payment initiation error: ${error.message}`);
@@ -110,10 +152,14 @@ export const paymentService = {
         throw new Error("Payment record not found");
       }
 
-      // Update order status
-      await OrdersModel.findByIdAndUpdate(
-        payment.orderId,
-        { status: "confirmed" }
+      // Confirm every order tied to this payment (works for single and multi-order)
+      const allOrderIds = payment.orderIds?.length
+        ? payment.orderIds
+        : [payment.orderId];
+
+      await OrdersModel.updateMany(
+        { _id: { $in: allOrderIds } },
+        { $set: { status: "confirmed", paymentStatus: "completed" } }
       );
 
       return {
@@ -133,6 +179,7 @@ export const paymentService = {
 
       const payments = await PaymentModel.find({ userId })
         .populate("orderId")
+        .populate("orderIds")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });

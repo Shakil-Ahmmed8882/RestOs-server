@@ -5,8 +5,8 @@ export const paymentControllers = {
   // Initiate payment
   async handleInitiatePayment(req: Request, res: Response) {
     try {
-      const { orderId } = req.body;
-      const userId = (req.user as any)?._id || req.body.userId;
+      const { orderId, orderIds } = req.body;
+      const userId = (req.user as any)?.userId || (req.user as any)?._id;
 
       if (!userId) {
         res.status(401).json({
@@ -16,7 +16,10 @@ export const paymentControllers = {
         return;
       }
 
-      const result = await paymentService.initiatePayment(orderId, userId);
+      const result = await paymentService.initiatePayment(
+        { orderId, orderIds },
+        userId
+      );
 
       res.status(200).json({
         success: true,
@@ -110,7 +113,7 @@ export const paymentControllers = {
   // Get payment history
   async handleGetPaymentHistory(req: Request, res: Response) {
     try {
-      const userId = (req.user as any)?._id;
+      const userId = (req.user as any)?.userId || (req.user as any)?._id;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
