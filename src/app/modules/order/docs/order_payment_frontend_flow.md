@@ -264,10 +264,10 @@ Deliverables:
 1. `initiatePayment({ orderIds }): Promise<{ paymentUrl, transactionId, orderIds, totalAmount }>` — accepts either `{ orderId }` or `{ orderIds: string[] }`.
 2. `useInitiatePayment()` — on success, **`window.location.href = data.paymentUrl`**. Do not return to the caller, do not show a toast, do not optimistic-anything. The browser is leaving.
 3. `usePaymentHistory({ page, limit })` — `useInfiniteQuery` keyed on `["payments", "history", { page, limit }]`.
-4. Routes:
-   - `/payment-success` — on mount, read `searchParams.transactionId`, call `useCart().clear()`, `queryClient.invalidateQueries(["payments","history"])` and `["orders","summary"]`, show ✓ card with "View purchases" → `/purchases`.
-   - `/payment-failed` — show ✗ + retry CTA that calls `initiatePayment(orderId)` with the orderId saved in sessionStorage.
-   - `/payment-cancelled` — show neutral state + "Back to cart" CTA.
+4. Routes (paths used by current backend: `/payments/success` and `/payments/error?variant=failed|cancelled`):
+   - **`/payments/success`** — on mount, run the full post-success cleanup (see §4.1 below).
+   - **`/payments/error?variant=failed`** — show ✗ + retry CTA that calls `initiatePayment({ orderIds })` with the orderIds saved in sessionStorage. **Do NOT clear the cart here.**
+   - **`/payments/error?variant=cancelled`** — show neutral state + "Back to cart" CTA. **Do NOT clear the cart here.**
 5. `/purchases` page — uses `usePaymentHistory`, filters `status === "completed"`, renders the populated `orderId.foodName`, `amount`, `createdAt`, `transactionId`.
 
 ### Agent C — Cart + checkout orchestration
@@ -362,19 +362,146 @@ export function usePlaceOrderAndPay() {
 }
 ```
 
-On the `/payment-success` page:
+### 4.1 Post-success cleanup — what `/payments/success` MUST do on mount
+
+After a payment lands the user on `/payments/success?transactionId=...`, both the **backend** and the **frontend** need to clean up. The backend has already done its half — you only do the client half. **Do not try to "also confirm" the payment from the frontend; the backend already did.**
+
+**What the backend already cleaned up (do not duplicate):**
+
+| Server-side cleanup | Effect |
+| --- | --- |
+| All paid orders → `status: "confirmed"`, `paymentStatus: "completed"` | They show up under "Purchased" |
+| `payment.status` → `"completed"` | Appears in `/payments/history` |
+| **All OTHER `pending` orders for this user** → `status: "canceled"`, `paymentStatus: "cancelled"` | The "pending list bug" from before — stale rows the user accumulated by re-adding the same item to cart are now wiped. The user's pending list will be empty after this. |
+
+**What the frontend MUST do on `/payments/success` mount:**
 
 ```ts
-useEffect(() => {
-  const txn = new URLSearchParams(location.search).get("transactionId");
-  if (!txn) return;
-  useCart.getState().clear();
-  qc.invalidateQueries({ queryKey: ["payments", "history"] });
-  qc.invalidateQueries({ queryKey: ["orders", "summary", user._id] });
-  sessionStorage.removeItem("pendingOrderId");
-  sessionStorage.removeItem("pendingTxnId");
-}, []);
+// features/payments/pages/PaymentSuccessPage.tsx
+"use client";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCart } from "@/features/cart/store/useCart";
+import { useAuthUser } from "@/features/auth/hooks";
+
+export default function PaymentSuccessPage() {
+  const params = useSearchParams();
+  const txn = params.get("transactionId");
+  const qc = useQueryClient();
+  const user = useAuthUser();
+
+  useEffect(() => {
+    if (!txn) return;
+
+    // 1. Local cart — empty it. The items just turned into confirmed orders.
+    useCart.getState().clear();
+
+    // 2. Wipe the checkout breadcrumbs in sessionStorage. They are dead state
+    //    that would otherwise confuse a retry flow on a different cart.
+    sessionStorage.removeItem("pendingOrderIds");
+    sessionStorage.removeItem("pendingTxnId");
+    sessionStorage.removeItem("pendingTotal");
+
+    // 3. Invalidate every server-cached list that the cleanup affected. The
+    //    user lands here, sees fresh data, no stale "pending" rows linger.
+    qc.invalidateQueries({ queryKey: ["payments", "history"] });
+    qc.invalidateQueries({ queryKey: ["payments"] });
+    qc.invalidateQueries({ queryKey: ["orders", "summary", user?._id] });
+    qc.invalidateQueries({ queryKey: ["orders", "list"] });   // pending list
+    qc.invalidateQueries({ queryKey: ["orders", "user", user?._id] });
+    qc.invalidateQueries({ queryKey: ["orders", "pending"] }); // if you have one
+    qc.invalidateQueries({ queryKey: ["orders", "purchased"] });
+  }, [txn, qc, user?._id]);
+
+  // ...render emerald success UI
+}
 ```
+
+**Rules for the cleanup effect — non-negotiable:**
+
+1. **Run it exactly once per mount.** React Strict Mode in dev will fire `useEffect` twice. `useCart.getState().clear()` is idempotent so that's fine. The query invalidations are also idempotent. But **don't** make any extra network calls here.
+
+2. **Don't gate on `txn` being valid.** The backend trusted SSLCommerz when it routed to `/success`, so the client should too. If the user typed `/payments/success` directly with no `transactionId`, just skip cleanup and render the page — don't redirect them anywhere.
+
+3. **Don't call the backend to "confirm" anything.** The backend already did everything. The success page is presentational + cache invalidation only.
+
+4. **Clear `sessionStorage` keys** — those breadcrumbs were for a retry flow on the *failed* page. Once you're on success they're stale and will cause weird bugs if the user starts another checkout.
+
+### 4.2 What `/payments/error?variant=…` MUST do on mount
+
+```ts
+// features/payments/pages/PaymentErrorPage.tsx
+"use client";
+import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+
+export default function PaymentErrorPage() {
+  const params = useSearchParams();
+  const variant = params.get("variant") ?? "failed";   // "failed" | "cancelled"
+  const txn = params.get("transactionId");
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    // The orders are still pending (or, on cancel, the backend marked the
+    // payment "cancelled" but left the orders in place). Refresh the lists
+    // so the user can retry from a clean view.
+    qc.invalidateQueries({ queryKey: ["orders", "list"] });
+    qc.invalidateQueries({ queryKey: ["orders", "pending"] });
+    qc.invalidateQueries({ queryKey: ["payments", "history"] });
+    // DO NOT clear the cart — the user may want to retry.
+  }, [qc]);
+
+  // …render pink error UI with "Back to cart" + "Try again" CTAs.
+  // "Try again" reads sessionStorage("pendingOrderIds") and calls
+  //   initiatePayment({ orderIds }) again with the SAME orderIds.
+}
+```
+
+### 4.3 The full lifecycle of cart/order/payment state
+
+This is the mental model — print this and keep it next to the code.
+
+```
+[BROWSE]                cart = [],          orders(user) = []
+   │ user clicks "Add"
+   ▼
+[CART HAS ITEMS]        cart = [A, B, C],   orders(user) = []
+   │ user clicks "Checkout"
+   ▼
+[ORDERS PLACED]         cart = [A, B, C],   orders(user) = [A:pending, B:pending, C:pending]
+   │ /payments/initiate            (cart still NOT cleared)
+   ▼
+[AT SSLCOMMERZ]         cart = [A, B, C],   orders(user) = same
+   │
+   ├── SUCCESS ──────────────────────────────────────────────────────┐
+   │   /payments/success?transactionId=…                            │
+   │   Backend already did: A,B,C → confirmed; any other            │
+   │   pending → canceled.                                          │
+   │   Frontend does: cart.clear(), invalidate all queries.         │
+   │   ▼                                                             │
+   │   [PURCHASED]      cart = [],         orders(user) = [A:confirmed, B:confirmed, C:confirmed]
+   │
+   ├── FAILED ───────────────────────────────────────────────────────┐
+   │   /payments/error?variant=failed                                │
+   │   Backend: payment.status = "failed". Orders stay pending.      │
+   │   Frontend: cart STAYS, retry CTA available.                    │
+   │   ▼                                                             │
+   │   [USER RETRIES]   cart = [A,B,C],    orders(user) = [A:pending, B:pending, C:pending]
+   │
+   └── CANCELLED ────────────────────────────────────────────────────┐
+       /payments/error?variant=cancelled                              │
+       Backend: payment.status = "cancelled". Orders stay pending.    │
+       Frontend: cart STAYS, "Back to cart" CTA.                      │
+       ▼                                                              │
+       [USER RECONSIDERS]  cart = [A,B,C], orders(user) = same        │
+```
+
+**The two things that ONLY clear on success:**
+1. The Zustand cart.
+2. Other stale pending orders the user accumulated (backend does this).
+
+Nothing else clears. Failed/cancelled both leave you exactly where you started so retry is friction-free.
 
 ---
 
