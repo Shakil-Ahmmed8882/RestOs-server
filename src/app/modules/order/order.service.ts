@@ -136,48 +136,101 @@ const deleteOrder = async (orderId: string) => {
 };
 
 /**
- * Retrieves the order summary for a specific user.
- *
- * @param userId - The email of the user for whom to retrieve the order summary.
- * @returns An object containing the total purchase price and total order count.
+ * Retrieves the order summary for a specific user — totals plus a
+ * per-status breakdown (count + price for pending / confirmed / canceled).
+ * Drives the tab counters and dashboard cards on the frontend.
  */
 const getOrderSummaryOfSingleUser = async (userId: string) => {
-  // Fetch orders associated with the user
+  const orders = await OrdersModel.find({ user: userId });
 
-  const orders = await OrdersModel.find({
-    user: userId,
-  });
+  const empty = { count: 0, totalPrice: 0 };
+  const byStatus: Record<"pending" | "confirmed" | "canceled", typeof empty> = {
+    pending: { ...empty },
+    confirmed: { ...empty },
+    canceled: { ...empty },
+  };
 
-  if (!orders) {
-    throw new AppError(httpStatus.NOT_FOUND, "Opps! order is not found");
+  for (const o of orders) {
+    const key = (o.status as keyof typeof byStatus) ?? "pending";
+    if (byStatus[key]) {
+      byStatus[key].count += 1;
+      byStatus[key].totalPrice += o.totalPrice;
+    }
   }
-  // Calculate totals
-  const totalPurchasePrice = orders
-    .filter((order) => order.status === "confirmed")
-    .reduce((acc, order) => acc + order.totalPrice, 0);
-
-  const totalPurchaseCount = orders.filter(
-    (order) => order.status === "confirmed"
-  ).length;
-
-  const totalOrderPrice = orders
-    .reduce((acc, order) => acc + order.totalPrice, 0)
-    .toFixed(2);
 
   const totalOrderCount = orders.length;
+  const totalOrderPrice = orders.reduce((acc, o) => acc + o.totalPrice, 0);
 
   return {
-    totalPurchasePrice,
-    totalPurchaseCount,
-    totalOrderPrice,
     totalOrderCount,
+    totalOrderPrice: Number(totalOrderPrice.toFixed(2)),
+    // Legacy fields kept for back-compat with existing UI cards
+    totalPurchaseCount: byStatus.confirmed.count,
+    totalPurchasePrice: Number(byStatus.confirmed.totalPrice.toFixed(2)),
+    byStatus: {
+      pending: {
+        count: byStatus.pending.count,
+        totalPrice: Number(byStatus.pending.totalPrice.toFixed(2)),
+      },
+      confirmed: {
+        count: byStatus.confirmed.count,
+        totalPrice: Number(byStatus.confirmed.totalPrice.toFixed(2)),
+      },
+      canceled: {
+        count: byStatus.canceled.count,
+        totalPrice: Number(byStatus.canceled.totalPrice.toFixed(2)),
+      },
+    },
   };
+};
+
+/**
+ * Paginated, filterable, searchable list of a single user's orders.
+ * Supports query params: status, paymentStatus, searchTerm (on foodName),
+ * sort, page, limit, fields, plus the standard filter passthrough.
+ */
+const getUserOrders = async (
+  userId: string,
+  query: Record<string, unknown>
+) => {
+  const baseFilter = { user: userId };
+  const orderQuery = new QueryBuilder(
+    OrdersModel.find(baseFilter),
+    query
+  )
+    .search(["foodName"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const meta = await orderQuery.countTotal();
+  const result = await orderQuery.modelQuery
+    .populate("food")
+    .populate("user");
+
+  return { meta, result };
+};
+
+/**
+ * Bulk-cancel every still-pending order belonging to a user. Used by the
+ * "Clear pending" action on the frontend orders table. Returns the number
+ * of orders updated.
+ */
+const cancelUserPendingOrders = async (userId: string) => {
+  const result = await OrdersModel.updateMany(
+    { user: userId, status: "pending" },
+    { $set: { status: "canceled", paymentStatus: "cancelled" } }
+  );
+  return { cancelled: result.modifiedCount };
 };
 
 export const OrderServiices = {
   createOrder: createOrders,
   getSingleOrder,
   getAllOrders,
+  getUserOrders,
+  cancelUserPendingOrders,
   deleteOrder,
   getOrderSummaryOfSingleUser,
   updateOrder,
