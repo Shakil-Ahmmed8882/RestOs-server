@@ -34,6 +34,38 @@ export const paymentControllers = {
     }
   },
 
+  // Demo mock payment — instant success, no gateway
+  async handleMockPay(req: Request, res: Response) {
+    try {
+      const { orderId, orderIds } = req.body;
+      const userId = (req.user as any)?.userId || (req.user as any)?._id;
+
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: "User not authenticated",
+        });
+        return;
+      }
+
+      const result = await paymentService.mockPay(
+        { orderId, orderIds },
+        userId
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Mock payment completed",
+        data: result,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  },
+
   // Payment success callback from SSL Commerz
   async handlePaymentSuccess(req: Request, res: Response) {
     try {

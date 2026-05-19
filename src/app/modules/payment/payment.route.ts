@@ -15,6 +15,14 @@ router.post(
   paymentControllers.handleInitiatePayment
 );
 
+// Demo / portfolio mock pay — instant success, no gateway
+router.post(
+  "/mock-pay",
+  auth(USER_ROLE.USER),
+  validateRequest(paymentValidations.initiatePaymentSchema),
+  paymentControllers.handleMockPay
+);
+
 // SSL Commerz callback URLs (public)
 router.get("/success", paymentControllers.handlePaymentSuccess);
 router.get("/fail", paymentControllers.handlePaymentFail);

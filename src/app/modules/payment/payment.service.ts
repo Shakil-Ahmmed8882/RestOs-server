@@ -172,6 +172,64 @@ export const paymentService = {
     }
   },
 
+  // Demo / hobby-project mock payment — skips SSLCommerz entirely.
+  // Creates a Payment doc, marks it completed, confirms all orders. One call.
+  async mockPay(
+    input: { orderId?: string; orderIds?: string[] },
+    userId: string
+  ) {
+    const ids = input.orderIds?.length
+      ? input.orderIds
+      : input.orderId
+        ? [input.orderId]
+        : [];
+    if (ids.length === 0) {
+      throw new Error("Provide either orderId or orderIds[]");
+    }
+
+    const orders = await OrdersModel.find({ _id: { $in: ids } });
+    if (orders.length !== ids.length) {
+      throw new Error("One or more orders not found");
+    }
+
+    const sameUser = orders.every(
+      (o) => String(o.user) === String(userId)
+    );
+    if (!sameUser) {
+      throw new Error("Orders do not belong to the authenticated user");
+    }
+
+    const totalAmount = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+    const primary = orders[0];
+    const transactionId = `MOCK-${primary._id}-${randomUUID()}`;
+
+    const payment = await PaymentModel.create({
+      orderId: primary._id,
+      orderIds: orders.map((o) => o._id),
+      userId,
+      amount: totalAmount,
+      currency: "BDT",
+      transactionId,
+      status: "completed",
+      paymentMethod: "mock",
+      sslcommerzResponse: { mock: true, at: new Date().toISOString() },
+    });
+
+    await OrdersModel.updateMany(
+      { _id: { $in: orders.map((o) => o._id) } },
+      { $set: { status: "confirmed", paymentStatus: "completed" } }
+    );
+
+    return {
+      success: true,
+      message: "Mock payment completed",
+      transactionId,
+      totalAmount,
+      orderIds: orders.map((o) => o._id),
+      paymentId: payment._id,
+    };
+  },
+
   // Get payment history for user
   async getPaymentHistory(userId: string, page: number = 1, limit: number = 10) {
     try {
