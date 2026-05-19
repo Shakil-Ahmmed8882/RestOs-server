@@ -1,3 +1,6 @@
+// Load .env FIRST, before any module that reads process.env at import time.
+import "./app/config";
+
 import express from "express";
 import mongoose from "mongoose";
 

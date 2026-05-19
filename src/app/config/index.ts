@@ -1,7 +1,23 @@
 import { config } from "dotenv";
+import path from "path";
+
+// Resolve .env relative to the repo root (this file lives at
+// src/app/config/index.ts, so go up three levels). This prevents
+// "STORE_ID is undefined" when the process is started from any cwd.
+const ENV_PATH = path.resolve(__dirname, "../../../.env");
 
 try {
-  config();
+  const result = config({ path: ENV_PATH });
+  if (result.error) {
+    console.log("dotenv load error:", result.error.message);
+  } else {
+    console.log(
+      "dotenv loaded from",
+      ENV_PATH,
+      "— STORE_ID set:",
+      !!process.env.STORE_ID
+    );
+  }
 } catch (error) {
   console.log("Could not load .env file:", error);
 }
