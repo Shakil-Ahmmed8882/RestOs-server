@@ -8,6 +8,10 @@ const PaymentSchema: Schema<TPayment> = new Schema(
       ref: "Orders",
       required: true,
     },
+    orderIds: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Orders" }],
+      default: [],
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",

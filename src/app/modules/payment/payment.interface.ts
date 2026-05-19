@@ -3,6 +3,7 @@ import { Schema } from "mongoose";
 export type TPayment = {
   _id?: string;
   orderId: Schema.Types.ObjectId;
+  orderIds: Schema.Types.ObjectId[];
   userId: Schema.Types.ObjectId;
   amount: number;
   currency: string;
