@@ -17,6 +17,26 @@ function withTxn(url: string, tranId: unknown): string {
   return `${url}${sep}transactionId=${encodeURIComponent(String(tranId))}`;
 }
 
+// SSLCommerz calls the success/fail/cancel URLs via POST from a browser form
+// submission inside an iframe/popup. A 302 alone does NOT navigate the top
+// browser window — the redirect happens inside the SSLCommerz iframe. Return
+// an HTML page that breaks out of the iframe and navigates the parent window.
+function sendClientRedirect(res: Response, target: string) {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.status(200).send(`<!doctype html>
+<html><head>
+<meta http-equiv="refresh" content="0;url=${target}">
+<title>Redirecting…</title>
+</head><body>
+<script>
+  // Break out of any SSLCommerz iframe and navigate the top window
+  try { window.top.location.href = ${JSON.stringify(target)}; }
+  catch (e) { window.location.href = ${JSON.stringify(target)}; }
+</script>
+<p>Redirecting to <a href="${target}">${target}</a>…</p>
+</body></html>`);
+}
+
 export const paymentControllers = {
   // Initiate payment
   async handleInitiatePayment(req: Request, res: Response) {
@@ -100,15 +120,15 @@ export const paymentControllers = {
         );
         const target = withTxn(successUrl, tran_id);
         console.log("[payment/success] redirecting to", target);
-        res.redirect(target);
+        sendClientRedirect(res, target);
       } else {
         const target = withTxn(failUrl, tran_id);
         console.log("[payment/success] non-VALID, redirecting to", target);
-        res.redirect(target);
+        sendClientRedirect(res, target);
       }
     } catch (error: any) {
       console.log("[payment/success] error, redirecting to fail:", error?.message);
-      res.redirect(failUrl);
+      sendClientRedirect(res, failUrl);
     }
   },
 
@@ -124,10 +144,10 @@ export const paymentControllers = {
       await paymentService.handlePaymentFailure(tran_id as string);
       const target = withTxn(failUrl, tran_id);
       console.log("[payment/fail] redirecting to", target);
-      res.redirect(target);
+      sendClientRedirect(res, target);
     } catch (error: any) {
       console.log("[payment/fail] error:", error?.message);
-      res.redirect(failUrl);
+      sendClientRedirect(res, failUrl);
     }
   },
 
@@ -143,10 +163,10 @@ export const paymentControllers = {
       await paymentService.handlePaymentCancellation(tran_id as string);
       const target = withTxn(cancelUrl, tran_id);
       console.log("[payment/cancel] redirecting to", target);
-      res.redirect(target);
+      sendClientRedirect(res, target);
     } catch (error: any) {
       console.log("[payment/cancel] error:", error?.message);
-      res.redirect(cancelUrl);
+      sendClientRedirect(res, cancelUrl);
     }
   },
 
