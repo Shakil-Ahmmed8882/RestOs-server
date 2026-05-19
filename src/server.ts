@@ -80,21 +80,58 @@ try {
     main();
   } else {
     console.log("Running in Vercel serverless environment");
-    // In serverless, connect lazily on first request
-    if (configModule.database_url) {
-      mongoose
-        .connect(configModule.database_url, {
-          socketTimeoutMS: 5000,
-          serverSelectionTimeoutMS: 5000,
-        })
-        .then(() => {
-          console.log("Database connected in serverless");
-          isConnected = true;
-        })
-        .catch((err) => {
-          console.error("Failed to connect to database:", err?.message);
+
+    // In serverless, cache the connection promise and AWAIT it before every
+    // request reaches a route handler. Without this, the first request after
+    // a cold start races with mongoose.connect() and writes can hang/fail.
+    let dbPromise: Promise<typeof mongoose> | null = null;
+    const connect = () => {
+      if (!configModule.database_url) {
+        return Promise.reject(new Error("DATABASE_URL is not configured"));
+      }
+      if (!dbPromise) {
+        dbPromise = mongoose
+          .connect(configModule.database_url, {
+            // Higher timeouts than dev — Atlas + Vercel cold paths can be slow.
+            socketTimeoutMS: 20000,
+            serverSelectionTimeoutMS: 15000,
+            // Keep the pool small in serverless — every container is short-lived.
+            maxPoolSize: 5,
+          })
+          .then((m) => {
+            console.log("Database connected in serverless");
+            isConnected = true;
+            return m;
+          })
+          .catch((err) => {
+            // Reset so the NEXT request can retry instead of permanently failing.
+            dbPromise = null;
+            console.error("Failed to connect to database:", err?.message);
+            throw err;
+          });
+      }
+      return dbPromise;
+    };
+
+    // Kick off the connection eagerly on module load
+    connect().catch(() => {
+      /* errors already logged; per-request middleware below will retry */
+    });
+
+    // Gate every request on a ready DB connection
+    mainApp.use(async (_req: any, res: any, next: any) => {
+      if (mongoose.connection.readyState === 1) return next();
+      try {
+        await connect();
+        next();
+      } catch (err: any) {
+        res.status(503).json({
+          success: false,
+          message: "Database is warming up, please retry in a moment.",
+          error: err?.message,
         });
-    }
+      }
+    });
   }
 } catch (error: any) {
   loadError = error;
