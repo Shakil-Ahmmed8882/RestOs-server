@@ -23,10 +23,14 @@ router.post(
   paymentControllers.handleMockPay
 );
 
-// SSL Commerz callback URLs (public)
+// SSL Commerz callback URLs (public). SSLCommerz uses POST for these,
+// but we accept GET too for easy manual testing.
 router.get("/success", paymentControllers.handlePaymentSuccess);
+router.post("/success", paymentControllers.handlePaymentSuccess);
 router.get("/fail", paymentControllers.handlePaymentFail);
+router.post("/fail", paymentControllers.handlePaymentFail);
 router.get("/cancel", paymentControllers.handlePaymentCancel);
+router.post("/cancel", paymentControllers.handlePaymentCancel);
 
 // IPN handler (webhook from SSL Commerz)
 router.post("/ipn", paymentControllers.handleIPN);
