@@ -22,6 +22,9 @@ router.post(
 // Public - Get all foods (top selling)
 router.get("/top-selling-food", foodControllers.handleGetTopFoods);
 
+// Public - Get sidebar filter options (categories, cuisines, tags, price bounds)
+router.get("/filter-options", foodControllers.handleGetFilterOptions);
+
 // Public - Get all foods
 router.get("/", foodControllers.handleGetAllFoods);
 

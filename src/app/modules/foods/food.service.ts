@@ -251,6 +251,35 @@ const deleteFood = async (foodId: string) => {
   }
 };
 
+const getFilterOptions = async () => {
+  const [categories, cuisines, tags, priceBounds] = await Promise.all([
+    FoodModel.distinct("foodCategory"),
+    FoodModel.distinct("cuisine"),
+    FoodModel.distinct("tags"),
+    FoodModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+        },
+      },
+    ]),
+  ]);
+
+  return {
+    categories: categories.filter(Boolean),
+    cuisines: cuisines.filter(Boolean),
+    tags: tags.filter(Boolean),
+    price: {
+      min: priceBounds[0]?.minPrice ?? 0,
+      max: priceBounds[0]?.maxPrice ?? 0,
+    },
+    dietary: ["isVeg", "isSpicy", "isGlutenFree"],
+    availability: ["inStock", "hasDiscount", "bestseller"],
+  };
+};
+
 const addReview = async (foodId: string, reviewData: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -278,6 +307,7 @@ export const foodServices = {
   getSingleFood,
   getTopSellingFood,
   getAllFoods,
+  getFilterOptions,
   updateFood,
   deleteFood,
   addReview,

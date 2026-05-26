@@ -42,6 +42,17 @@ const handleGetAllFoods = catchAsync(async (req, res) => {
   });
 });
 
+const handleGetFilterOptions = catchAsync(async (_req, res) => {
+  const result = await foodServices.getFilterOptions();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Filter options retrieved successfully",
+    data: result,
+  });
+});
+
 const handleGetTopFoods = catchAsync(async (req, res) => {
   const result = await foodServices.getAllFoods(req.query);
 
@@ -104,6 +115,7 @@ export const foodControllers = {
   handleGetSingleFood,
   handleGetAllFoods,
   handleGetTopFoods,
+  handleGetFilterOptions,
   handleUpdateFood,
   handleDeleteFood,
   handleAddReview,
