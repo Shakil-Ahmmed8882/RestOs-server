@@ -78,15 +78,17 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     errorSources = [{ path: '', message: err?.message }];
   }
 
+  // Only expose the raw error object and stack outside production. In
+  // production these leak internals (filesystem paths, query shapes, secrets
+  // embedded in error messages) to clients.
+  const isDev = config.NODE_ENV !== 'production';
+
   res.status(statusCode).json({
     success: false,
     message,
     errorSources,
-    err,
-    stack: config.NODE_ENV === 'development' ? err?.stack : null,
+    ...(isDev ? { err, stack: err?.stack } : {}),
   });
-
-  
 };
 
 export default globalErrorHandler;
