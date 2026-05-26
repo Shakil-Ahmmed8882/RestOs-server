@@ -56,9 +56,11 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Restaurant Operating System Server!');
 });
 
-app.use(globalErrorHandler);
-
-//Not Found
+// Express convention: notFound must run BEFORE the error handler so that
+// unmatched routes get a 404 JSON instead of falling through silently, and
+// the error handler stays last so it catches everything via next(err).
 app.use(notFound);
+
+app.use(globalErrorHandler);
 
 export default app;
