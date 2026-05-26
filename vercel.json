@@ -3,17 +3,14 @@
   "buildCommand": "npm run build",
   "builds": [
     {
-      "src": "dist/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "nodeVersion": "24.x"
-      }
+      "src": "src/server.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dist/server.js"
+      "dest": "src/server.ts"
     }
   ]
 }

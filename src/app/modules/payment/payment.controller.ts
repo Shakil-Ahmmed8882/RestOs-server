@@ -104,9 +104,7 @@ export const paymentControllers = {
 
   // Payment success callback from SSL Commerz (POST in production, GET for manual tests)
   async handlePaymentSuccess(req: Request, res: Response) {
-    // HARDCODED for debugging — confirm redirect logic works, then revert to env vars
-    const successUrl = "http://localhost:3000/payments/success";
-    const failUrl = "http://localhost:3000/payments/error?variant=failed";
+    const successUrl = buildRedirect("CLIENT_SUCCESS_URL", "/payments/success");
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id, val_id } = src;
@@ -142,7 +140,7 @@ export const paymentControllers = {
 
   // Payment failure callback from SSL Commerz
   async handlePaymentFail(req: Request, res: Response) {
-    const failUrl = "http://localhost:3000/payments/error?variant=failed";
+    const failUrl = buildRedirect("CLIENT_FAILED_URL", "/payments/error?variant=failed");
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id } = src;
@@ -161,7 +159,7 @@ export const paymentControllers = {
 
   // Payment cancellation callback from SSL Commerz
   async handlePaymentCancel(req: Request, res: Response) {
-    const cancelUrl = "http://localhost:3000/payments/error?variant=cancelled";
+    const cancelUrl = buildRedirect("CLIENT_CANCELLED_URL", "/payments/error?variant=cancelled");
     try {
       const src = { ...(req.query as any), ...(req.body as any) };
       const { tran_id } = src;

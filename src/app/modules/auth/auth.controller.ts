@@ -10,9 +10,12 @@ const loginUser = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUser(req.body);
   const { refreshToken, accessToken, user } = result;
 
+  // Cross-domain cookies (api.vercel.app -> client.vercel.app) require
+  // sameSite:'none' + secure:true. Browsers silently drop the cookie otherwise.
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production'
+    secure: config.NODE_ENV === 'production',
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 
   sendResponse(res, {
@@ -29,9 +32,6 @@ const loginUser = catchAsync(async (req, res) => {
 
 const refreshToken = catchAsync(async (req, res) => {
   const { refreshToken } = req.cookies;
-
-  
-  console.log("_______________>>>>>>>>>>>>", refreshToken)
   const result = await AuthServices.refreshToken(refreshToken);
 
 
@@ -45,9 +45,10 @@ const refreshToken = catchAsync(async (req, res) => {
 const registerUser = catchAsync(async (req, res) => {
   const result = await AuthServices.registerUser(req.body, req.file);
 
-  res.cookie("refreshToken",result?.refreshToken,{
+  res.cookie("refreshToken", result?.refreshToken, {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production'
+    secure: config.NODE_ENV === 'production',
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 
   sendResponse(res, {

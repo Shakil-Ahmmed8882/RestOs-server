@@ -56,6 +56,13 @@ export const paymentService = {
       const primary = orders[0];
       const transactionId = `TXN-${primary._id}-${randomUUID()}`;
 
+      // SERVER_URL may or may not already include /api/v1. Normalize so we
+      // never produce /api/v1/api/v1/... (the 404 bug in production).
+      const rawServerUrl = (process.env.SERVER_URL || "http://localhost:5000").replace(/\/+$/, "");
+      const apiBase = rawServerUrl.endsWith("/api/v1")
+        ? rawServerUrl
+        : `${rawServerUrl}/api/v1`;
+
       const productNames = orders
         .map((o) => (o.food as any)?.name || "Food Item")
         .slice(0, 5)
@@ -78,10 +85,10 @@ export const paymentService = {
         total_amount: totalAmount,
         currency: "BDT",
         tran_id: transactionId,
-        success_url: `${process.env.SERVER_URL}/api/v1/payments/success`,
-        fail_url: `${process.env.SERVER_URL}/api/v1/payments/fail`,
-        cancel_url: `${process.env.SERVER_URL}/api/v1/payments/cancel`,
-        ipn_url: `${process.env.SERVER_URL}/api/v1/payments/ipn`,
+        success_url: `${apiBase}/payments/success`,
+        fail_url: `${apiBase}/payments/fail`,
+        cancel_url: `${apiBase}/payments/cancel`,
+        ipn_url: `${apiBase}/payments/ipn`,
         cus_name: (primary.user as any).name || "Customer",
         cus_email: (primary.user as any).email || "customer@example.com",
         cus_phone: (primary.user as any).phone || "01700000000",
