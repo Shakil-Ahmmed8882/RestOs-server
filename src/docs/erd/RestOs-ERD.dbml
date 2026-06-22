@@ -1,0 +1,176 @@
+// RestOs — Database Markup Language (DBML)
+// ----------------------------------------------------------------------
+// View / use this file:
+//   • Paste into https://dbdiagram.io  → instant interactive ERD
+//     (auto-routes every relationship with crow's-foot notation)
+//   • Export from dbdiagram.io to PNG / PDF / SQL / draw.io
+//
+// Notes on this MongoDB (Mongoose) schema represented as relational DBML:
+//   • [ref: > X._id]  means a many-to-one ObjectId reference.
+//   • `foodCategory` and `Save.item` are NOT enforced FKs in Mongo —
+//     they are matched logically. Modeled here as refs for visualization
+//     and annotated in the Note.
+//   • Review and Reply are EMBEDDED subdocuments (no own collection);
+//     modeled as tables linked to their parent for clarity.
+// ----------------------------------------------------------------------
+
+Table User {
+  _id ObjectId [pk]
+  name string [not null]
+  email string [unique, not null]
+  role string [note: "ADMIN | USER"]
+  status string [note: "ACTIVE | BLOCKED"]
+  photo string
+  bio string
+  location string
+  cuisinePreferences "string[]"
+  favoriteRestaurants "string[]"
+  dietaryRestrictions "string[]"
+  preferredMealTimes "string[]"
+  paymentMethods "string[]"
+  contactNumber string
+  diningFrequency string
+  isDeleted boolean
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Blog {
+  _id ObjectId [pk]
+  title string [not null]
+  author_user ObjectId [ref: > User._id, note: "author.user"]
+  author_name string
+  category string
+  description string
+  instructions "string[]"
+  tags "string[]"
+  image string
+  status string [note: "pending | approved | test-approved"]
+  upvotes number
+  downvotes number
+  commentsCount number
+  isDeleted boolean
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table FoodCategory {
+  _id ObjectId [pk]
+  name string [unique, not null]
+  description string
+  image string
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Food {
+  _id ObjectId [pk]
+  foodName string [not null]
+  foodCategory string [ref: > FoodCategory.name, note: "logical ref by name, NOT enforced"]
+  price number [not null]
+  discountPercent number
+  quantity number [not null]
+  orders number
+  made_by string
+  food_origin string
+  cuisine string
+  isVeg boolean
+  isSpicy boolean
+  isGlutenFree boolean
+  tags "string[]"
+  averageRating number
+  popularity number
+  bestseller boolean
+  status string
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+// Embedded subdocument of Food (Food.reviews[])
+Table Review {
+  food_id ObjectId [ref: > Food._id, note: "embedded in Food.reviews[]"]
+  customer_name string [not null]
+  rating number [note: "0 - 5"]
+  comment string [not null]
+  date string [not null]
+}
+
+Table Order {
+  _id ObjectId [pk]
+  food ObjectId [ref: > Food._id, not null]
+  user ObjectId [ref: > User._id, not null]
+  foodName string
+  price number [not null]
+  totalPrice number [not null]
+  quantity number [not null]
+  status string [note: "pending | confirmed | canceled"]
+  paymentStatus string [note: "pending | completed | failed | cancelled"]
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Payment {
+  _id ObjectId [pk]
+  orderId ObjectId [ref: > Order._id, not null]
+  userId ObjectId [ref: > User._id, not null]
+  amount number [not null]
+  currency string
+  transactionId string [unique, not null]
+  status string [note: "pending | completed | failed | cancelled"]
+  paymentMethod string
+  sslcommerzResponse json
+  createdAt timestamp
+  updatedAt timestamp
+  Note: 'Also has orderIds: ObjectId[] -> Order (batch payments, many-to-many)'
+}
+
+Table Comment {
+  _id ObjectId [pk]
+  blog ObjectId [ref: > Blog._id, not null]
+  user ObjectId [ref: > User._id, not null]
+  comment string [not null]
+  image string
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+// Embedded subdocument of Comment (Comment.replies[])
+Table Reply {
+  comment_id ObjectId [ref: > Comment._id, note: "embedded in Comment.replies[]"]
+  user ObjectId [ref: > User._id, not null]
+  comment string [not null]
+  createdAt timestamp
+}
+
+Table Vote {
+  _id ObjectId [pk]
+  user ObjectId [ref: > User._id, not null]
+  blog ObjectId [ref: > Blog._id, not null]
+  voteType string [note: "upvote | downvote"]
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Save {
+  _id ObjectId [pk]
+  user ObjectId [ref: > User._id, not null]
+  type string [note: "blog | food"]
+  item ObjectId [note: "polymorphic -> Blog._id OR Food._id (resolved by `type`)"]
+  blog ObjectId [ref: > Blog._id, note: "legacy, optional"]
+  name string [not null]
+  timestamp timestamp
+  Note: 'Unique index on (user, type, item). `item` is polymorphic and not a hard FK.'
+}
+
+Table Analytics {
+  _id ObjectId [pk]
+  blog ObjectId [ref: > Blog._id, not null]
+  user ObjectId [ref: > User._id, not null]
+  actionType string [note: "view | upvote | downvote | comment | blog | save-blog | unsave-blog"]
+  resourceName string [not null]
+  userName string [not null]
+  description string
+  timestamp timestamp
+  createdAt timestamp
+  updatedAt timestamp
+}

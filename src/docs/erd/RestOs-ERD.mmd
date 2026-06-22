@@ -1,0 +1,158 @@
+erDiagram
+    USER {
+        ObjectId _id PK
+        string name
+        string email UK
+        string role
+        string status
+        string photo
+        string bio
+        string location
+        string_array cuisinePreferences
+        string_array favoriteRestaurants
+        string_array dietaryRestrictions
+        string_array preferredMealTimes
+        string_array paymentMethods
+        object socialMedia
+        boolean isDeleted
+    }
+
+    BLOG {
+        ObjectId _id PK
+        string title
+        ObjectId author_user FK
+        string author_name
+        string category
+        string description
+        string_array instructions
+        string_array tags
+        string status
+        number upvotes
+        number downvotes
+        number commentsCount
+        boolean isDeleted
+    }
+
+    FOOD {
+        ObjectId _id PK
+        string foodName
+        string foodCategory FK
+        number price
+        number discountPercent
+        number quantity
+        number orders
+        string made_by
+        string food_origin
+        string cuisine
+        boolean isVeg
+        boolean isSpicy
+        boolean isGlutenFree
+        string_array tags
+        number averageRating
+        number popularity
+        boolean bestseller
+        string status
+    }
+
+    FOODCATEGORY {
+        ObjectId _id PK
+        string name UK
+        string description
+        string image
+    }
+
+    REVIEW {
+        string customer_name
+        number rating
+        string comment
+        string date
+    }
+
+    ORDER {
+        ObjectId _id PK
+        ObjectId food FK
+        ObjectId user FK
+        string foodName
+        number price
+        number totalPrice
+        number quantity
+        string status
+        string paymentStatus
+    }
+
+    PAYMENT {
+        ObjectId _id PK
+        ObjectId orderId FK
+        ObjectId_array orderIds FK
+        ObjectId userId FK
+        number amount
+        string currency
+        string transactionId UK
+        string status
+        string paymentMethod
+        object sslcommerzResponse
+    }
+
+    COMMENT {
+        ObjectId _id PK
+        ObjectId blog FK
+        ObjectId user FK
+        string comment
+        string image
+    }
+
+    REPLY {
+        ObjectId user FK
+        string comment
+        date createdAt
+    }
+
+    VOTE {
+        ObjectId _id PK
+        ObjectId user FK
+        ObjectId blog FK
+        string voteType
+    }
+
+    SAVE {
+        ObjectId _id PK
+        ObjectId user FK
+        string type
+        ObjectId item FK
+        ObjectId blog FK
+        string name
+    }
+
+    ANALYTICS {
+        ObjectId _id PK
+        ObjectId blog FK
+        ObjectId user FK
+        string actionType
+        string resourceName
+        string userName
+        string description
+    }
+
+    USER         ||--o{ ORDER     : "places"
+    USER         ||--o{ BLOG      : "authors (author.user FK)"
+    USER         ||--o{ COMMENT   : "writes"
+    USER         ||--o{ REPLY     : "writes"
+    USER         ||--o{ VOTE      : "casts"
+    USER         ||--o{ SAVE      : "saves"
+    USER         ||--o{ ANALYTICS : "generates"
+    USER         ||--o{ PAYMENT   : "pays (userId FK)"
+
+    BLOG         ||--o{ COMMENT   : "has"
+    BLOG         ||--o{ VOTE      : "receives"
+    BLOG         ||--o{ ANALYTICS : "tracked by"
+    BLOG         ||--o{ SAVE      : "saved as item or legacy blog"
+
+    FOODCATEGORY ||--o{ FOOD      : "categorizes by name (FK* logical)"
+    FOOD         ||--o{ ORDER     : "ordered as"
+    FOOD         ||--o{ SAVE      : "saved as item (FK* polymorphic)"
+    FOOD         ||--|{ REVIEW    : "embeds"
+
+    ORDER        ||--o{ PAYMENT   : "paid by (orderId FK)"
+    ORDER        }o--o{ PAYMENT   : "batched in (orderIds FK)"
+
+    COMMENT      ||--o{ REPLY     : "embeds"
