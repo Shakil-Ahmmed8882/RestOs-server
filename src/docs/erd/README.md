@@ -1,13 +1,12 @@
 # RestOs — Entity Relationship Diagrams
 
-Auto-generated from the Mongoose models in `src/app/modules/**`.
-Three formats are provided so you can open it wherever is easiest — pick one:
+Hand-maintained snapshot of the Mongoose models in `src/app/modules/**`.
 
 | File | Best for | How to open |
 | --- | --- | --- |
-| [`RestOs-ERD.drawio`](./RestOs-ERD.drawio) | **draw.io** (your ask) | Go to <https://app.diagrams.net> → **File ▸ Open From ▸ Device** → pick this file. Hand-laid-out: User-centered hub, domain clusters, orthogonal corridor routing, zero line-crossings, dark professional theme. |
-| [`RestOs-ERD.mmd`](./RestOs-ERD.mmd) | Quick view / GitHub / VS Code | Paste into <https://mermaid.live>, or render in any Markdown that supports Mermaid. draw.io can also import it via **Arrange ▸ Insert ▸ Advanced ▸ Mermaid**. |
-| [`RestOs-ERD.dbml`](./RestOs-ERD.dbml) | Interactive auto-layout | Paste into <https://dbdiagram.io>. Auto-routes every relationship; exports to PNG/PDF/SQL. |
+| [`RestOs-ERD.drawio`](./RestOs-ERD.drawio) | **draw.io** | Go to <https://app.diagrams.net> → **File ▸ Open From ▸ Device** → pick this file. Hand-laid-out: User-centered hub, domain clusters, orthogonal corridor routing, zero line-crossings, dark professional theme. |
+| [`REQUIREMENTS.md`](./REQUIREMENTS.md) | The business brief behind the model | The plain-language requirement analysis this ERD was designed from. Read it first to see *why* each entity exists. |
+| [`USER-FLOW.md`](./USER-FLOW.md) | Video script / walkthrough | The narration script that walks the diagram entity-by-entity, including the cardinality trade-offs. |
 
 ## Entities (11)
 
@@ -82,12 +81,11 @@ The `.drawio` diagram is laid out deliberately, not auto-arranged:
 - **Restrained palette**: dark charcoal canvas, one neutral connector color,
   soft per-domain header tints (blue/green/amber/violet) + gray for embedded.
 
-It is produced by [`generate-erd.py`](./generate-erd.py) rather than edited by
-hand — coordinates are computed so the grid stays perfectly aligned and lanes
-stay evenly spaced. Run `python generate-erd.py` to regenerate the `.drawio`.
+Coordinates are computed so the grid stays aligned and routing lanes stay evenly
+spaced.
 
 ## Regenerating
 
-These files are hand-maintained snapshots of the schema. If you change a model
-(`*.model.ts` / `*.interface.ts`), update the matching entity in all three files,
-or ask Claude to regenerate them from the current schema.
+This `.drawio` is a hand-maintained snapshot of the schema. If you change a model
+(`*.model.ts` / `*.interface.ts`), update the matching entity in the diagram, or
+ask Claude to regenerate it from the current schema.
